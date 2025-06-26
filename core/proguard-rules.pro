@@ -1,0 +1,3 @@
+-keep class com.shalan.analytics.annotation.TrackScreen { *; }
+-keep @com.shalan.analytics.annotation.TrackScreen class * { *; }
+-keepattributes *Annotation*

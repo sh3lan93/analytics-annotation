@@ -4,14 +4,12 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.shalan.analytics.annotation.TrackScreen
-import java.util.Stack
 
 /**
  * An implementation of [Application.ActivityLifecycleCallbacks] that automatically tracks
  * screen view events for Activities annotated with [TrackScreen].
  * This class is responsible for checking for the [TrackScreen] annotation, extracting
  * screen information and additional parameters, and dispatching them to the [AnalyticsManager].
- * It also tracks the screen flow to provide context about navigation paths.
  *
  * @param analyticsManager The [AnalyticsManager] instance to which screen view events will be sent.
  */
@@ -24,7 +22,6 @@ class ScreenTrackingCallbacks(
      */
     companion object {
         private val annotationCache = mutableMapOf<Class<*>, TrackScreen?>()
-        internal val activityStack = Stack<Activity>()
         private var activityCount = 0
     }
 
@@ -70,58 +67,17 @@ class ScreenTrackingCallbacks(
             }
         }
 
-        val previousScreenName = if (activityStack.isNotEmpty()) activityStack.peek().javaClass.simpleName else ""
-        val previousScreenClass = if (activityStack.isNotEmpty()) activityStack.peek().javaClass.name else ""
-        val navigationType = if (activityStack.isNotEmpty()) "forward" else "initial"
-
-        val screenFlowParams =
-            mapOf(
-                "previous_screen_name" to previousScreenName,
-                "previous_screen_class" to previousScreenClass,
-                "navigation_type" to navigationType,
-            )
-
-        analyticsManager.logScreenView(screenName, screenClass, filteredParams + screenFlowParams)
+        analyticsManager.logScreenView(screenName, screenClass, filteredParams)
     }
 
-    /**
-     * Called when an Activity is started. Adds the activity to the stack.
-     * @param activity The Activity that was started.
-     */
-    override fun onActivityStarted(activity: Activity) {
-        activityStack.push(activity)
-    }
+    override fun onActivityStarted(activity: Activity) {}
 
-    /**
-     * Called when an Activity is resumed.
-     * @param activity The Activity that was resumed.
-     */
     override fun onActivityResumed(activity: Activity) {}
 
-    /**
-     * Called when an Activity is paused.
-     * @param activity The Activity that was paused.
-     */
     override fun onActivityPaused(activity: Activity) {}
 
-    /**
-     * Called when an Activity is stopped. Removes the activity from the stack.
-     * @param activity The Activity that was stopped.
-     */
-    override fun onActivityStopped(activity: Activity) {
-        if (activityStack.isNotEmpty() && activityStack.peek() == activity) {
-            activityStack.pop()
-        } else {
-            // Handle cases where activity might be stopped out of order (e.g., due to system killing process)
-            activityStack.remove(activity)
-        }
-    }
+    override fun onActivityStopped(activity: Activity) {}
 
-    /**
-     * Called when an Activity is about to be saved.
-     * @param activity The Activity that was saved.
-     * @param outState Bundle in which to place your saved state.
-     */
     override fun onActivitySaveInstanceState(
         activity: Activity,
         outState: Bundle,

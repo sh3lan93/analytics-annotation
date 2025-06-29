@@ -1,6 +1,8 @@
 package com.shalan.analyticsannotation
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.shalan.analytics.annotation.TrackScreen
 import com.shalan.analytics.core.TrackedScreenParamsProvider
@@ -10,6 +12,10 @@ class MainActivity : AppCompatActivity(), TrackedScreenParamsProvider {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        findViewById<Button>(R.id.example_button).setOnClickListener {
+            startActivity(Intent(this, ExampleActivity::class.java))
+        }
     }
 
     override fun getTrackedScreenParams(): Map<String, Any> {

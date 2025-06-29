@@ -11,10 +11,9 @@ In many Android projects, screen tracking can become a tedious and error-prone p
 ## ✨ Features
 
 *   **Annotation-Driven**: Mark any Activity or Fragment with `@TrackScreen` for automatic tracking.
-*   **Lifecycle-Aware**: Leverages `Application.ActivityLifecycleCallbacks` for robust and centralized screen event detection.
+*   **Lifecycle-Aware**: Leverages `Application.ActivityLifecycleCallbacks` and `FragmentManager.FragmentLifecycleCallbacks` for robust and centralized screen event detection.
 *   **Performance Optimized**: Employs reflection caching to minimize overhead during runtime.
 *   **Flexible Parameter Handling**: Supports static parameters via annotation and dynamic, runtime parameters through an optional interface (`TrackedScreenParamsProvider`).
-*   **Screen Flow Tracking**: Automatically captures navigation paths, providing valuable context like `previous_screen_name`, `previous_screen_class`, and `navigation_type`.
 *   **Provider-Agnostic**: Easily integrate with any analytics service by implementing the `AnalyticsProvider` interface.
 *   **Error Resilient**: Analytics calls are wrapped in `try-catch` blocks to prevent crashes in case of provider failures.
 *   **Debug Mode**: Includes a built-in `InMemoryDebugAnalyticsProvider` for easy testing and verification of logged events during development.
@@ -66,7 +65,7 @@ class MyApplication : Application() {
 
     override fun onTerminate() {
         super.onTerminate()
-        ScreenTracking.shutdown() // Important for releasing resources
+        ScreenTracking.getManager().release() // Important for releasing resources
     }
 }
 ```
@@ -92,6 +91,15 @@ import com.shalan.analytics.annotation.TrackScreen
 @TrackScreen(screenName = "Home Screen")
 class HomeActivity : AppCompatActivity() {
     // ... your activity code
+}
+
+// ExampleFragment.kt
+import androidx.fragment.app.Fragment
+import com.shalan.analytics.annotation.TrackScreen
+
+@TrackScreen(screenName = "Example Fragment")
+class ExampleFragment : Fragment() {
+    // ... your fragment code
 }
 ```
 
@@ -166,7 +174,6 @@ Contributions are welcome! Please follow the existing code style, add tests for 
 *   **Event Batching**: Implement event batching for improved network efficiency.
 *   **Security Considerations**: Add checks for PII, parameter sanitization, and user privacy settings.
 *   **UI Tests**: Develop UI tests to confirm screen tracking during navigation.
-*   **Fragment Lifecycle Handling**: Extend screen flow tracking to handle Fragment lifecycle events more granularly (e.g., `onResume`, `onPause`).
 
 ## 📄 License
 

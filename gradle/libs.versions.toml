@@ -13,6 +13,7 @@ lifecycleCommonJava8 = "2.9.1"
 material = "1.10.0"
 mockk = "1.13.12"
 robolectric = "4.12.2"
+fragmentKtx = "1.8.2"
 
 [libraries]
 androidx-core = { module = "androidx.test:core", version.ref = "core" }
@@ -28,6 +29,7 @@ kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref =
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

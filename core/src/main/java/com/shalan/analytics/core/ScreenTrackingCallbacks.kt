@@ -3,6 +3,7 @@ package com.shalan.analytics.core
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
 import com.shalan.analytics.annotation.TrackScreen
 
 /**
@@ -40,6 +41,13 @@ class ScreenTrackingCallbacks(
         activity: Activity,
         savedInstanceState: Bundle?,
     ) {
+        if (activity is FragmentActivity) {
+            activity.supportFragmentManager.registerFragmentLifecycleCallbacks(
+                ScreenTrackingFragmentLifecycleCallbacks(analyticsManager),
+                true,
+            )
+        }
+
         activityCount++
         val clazz = activity::class.java
         val annotation =

@@ -103,9 +103,44 @@ class ExampleFragment : Fragment() {
 }
 ```
 
-### 3. Provide Dynamic Parameters (Optional)
+### 3. Tracking Jetpack Compose Screens
 
-If your screen needs to send dynamic parameters (e.g., user ID, product ID) that are not compile-time constants, implement the `TrackedScreenParamsProvider` interface:
+The library now supports tracking screen views in Jetpack Compose.
+
+First, add the `:compose` module to your dependencies:
+
+```kotlin
+dependencies {
+    // ... other dependencies
+    implementation(project(":compose"))
+}
+```
+
+Then, you can track your composable screens using the `TrackScreenView` composable function. For clarity and consistency, it's also recommended to annotate your main screen composable with `@TrackScreenComposable`.
+
+```kotlin
+// ProfileScreen.kt
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import com.shalan.analytics.compose.TrackScreenComposable
+import com.shalan.analytics.compose.TrackScreenView
+
+@TrackScreenComposable(screenName = "Profile Screen")
+@Composable
+fun ProfileScreen() {
+    // Wrap your screen's content with TrackScreenView
+    TrackScreenView(screenName = "Profile Screen") {
+        // ... your screen's UI
+        Text("This is the Profile Screen!")
+    }
+}
+```
+
+The `TrackScreenView` composable uses a `LaunchedEffect` to log the screen view event once when it enters the composition. The `@TrackScreenComposable` annotation serves as a clear marker for which composables are being tracked, making your code more self-documenting.
+
+### 4. Provide Dynamic Parameters (Optional)
+
+If your screen needs to send dynamic parameters (e.g., user ID, product ID) that are not compile-time constants, implement the `TrackedScreenParamsProvider` interface for Activities/Fragments.
 
 ```kotlin
 // ProductDetailActivity.kt
@@ -138,7 +173,7 @@ class ProductDetailActivity : AppCompatActivity(), TrackedScreenParamsProvider {
 
 The library will automatically filter `getTrackedScreenParams()` to only include keys specified in `additionalParams` of the `@TrackScreen` annotation.
 
-### 4. Setting Global Parameters
+### 5. Setting Global Parameters
 
 You can set global parameters that will be included with all subsequent analytics events. These are useful for user properties, app version, A/B test groups, etc.
 

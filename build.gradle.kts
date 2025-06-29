@@ -4,3 +4,19 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
 }
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        additionalEditorconfig.set(
+            mapOf(
+                "ktlint_function-naming" to "disabled",
+                "ktlint_standard_function-naming" to "disabled",
+            ),
+        )
+        filter {
+            exclude("**/generated/**")
+        }
+    }
+}

@@ -1,6 +1,7 @@
 package com.shalan.analytics.core
 
 import android.app.Application
+import androidx.annotation.VisibleForTesting
 
 /**
  * A singleton object responsible for initializing and providing access to the analytics manager.
@@ -8,6 +9,12 @@ import android.app.Application
  */
 object ScreenTracking {
     private lateinit var analyticsManager: AnalyticsManager
+
+    // For testing purposes only
+    @VisibleForTesting
+    fun setAnalyticsManagerForTesting(manager: AnalyticsManager) {
+        this.analyticsManager = manager
+    }
 
     /**
      * Initializes the Screen Tracking library.

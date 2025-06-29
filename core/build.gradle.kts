@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.common.java8)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.annotation)
 
     // Testing dependencies
     testImplementation(libs.junit)

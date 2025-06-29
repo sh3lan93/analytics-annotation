@@ -16,6 +16,10 @@ class MainActivity : AppCompatActivity(), TrackedScreenParamsProvider {
         findViewById<Button>(R.id.example_button).setOnClickListener {
             startActivity(Intent(this, ExampleActivity::class.java))
         }
+
+        findViewById<Button>(R.id.composable_button).setOnClickListener {
+            startActivity(Intent(this, ComposableActivity::class.java))
+        }
     }
 
     override fun getTrackedScreenParams(): Map<String, Any> {

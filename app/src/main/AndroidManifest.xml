@@ -26,6 +26,8 @@
 
         <activity android:name=".ExampleActivity" />
 
+        <activity android:name=".ComposableActivity" />
+
     </application>
 
 </manifest>

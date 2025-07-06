@@ -13,6 +13,7 @@ subprojects {
             mapOf(
                 "ktlint_function-naming" to "disabled",
                 "ktlint_standard_function-naming" to "disabled",
+                "ktlint_standard_comment-wrapping" to "disabled",
             ),
         )
         filter {

@@ -66,10 +66,10 @@ class AnalyticsPluginExtensionTest {
     @Test
     fun `extension handles empty package sets correctly`() {
         val extension = AnalyticsPluginExtension()
-        
+
         assertTrue(extension.includePackages.isEmpty())
         assertTrue(extension.excludePackages.isEmpty())
-        
+
         val toString = extension.toString()
         assertTrue(toString.contains("includePackages=[]"))
         assertTrue(toString.contains("excludePackages=[]"))
@@ -78,10 +78,10 @@ class AnalyticsPluginExtensionTest {
     @Test
     fun `extension handles multiple package entries`() {
         val extension = AnalyticsPluginExtension()
-        
+
         extension.includePackages = setOf("com.app", "com.feature", "com.ui")
         extension.excludePackages = setOf("com.test", "com.debug", "com.mock")
-        
+
         assertEquals(3, extension.includePackages.size)
         assertEquals(3, extension.excludePackages.size)
         assertTrue(extension.includePackages.contains("com.app"))
@@ -96,11 +96,11 @@ class AnalyticsPluginExtensionTest {
     fun `extension properties are independent`() {
         val extension1 = AnalyticsPluginExtension()
         val extension2 = AnalyticsPluginExtension()
-        
+
         extension1.enabled = false
         extension1.debugMode = true
         extension1.includePackages = setOf("com.first")
-        
+
         // extension2 should maintain default values
         assertTrue(extension2.enabled)
         assertFalse(extension2.debugMode)
@@ -110,16 +110,16 @@ class AnalyticsPluginExtensionTest {
     @Test
     fun `extension tracking flags work independently`() {
         val extension = AnalyticsPluginExtension()
-        
+
         // Test individual tracking flags
         extension.trackActivities = false
         assertTrue(extension.trackFragments) // Should remain true
         assertTrue(extension.trackComposables) // Should remain true
-        
-        extension.trackFragments = false 
+
+        extension.trackFragments = false
         assertFalse(extension.trackActivities) // Should remain false
         assertTrue(extension.trackComposables) // Should remain true
-        
+
         extension.trackComposables = false
         assertFalse(extension.trackActivities) // Should remain false
         assertFalse(extension.trackFragments) // Should remain false

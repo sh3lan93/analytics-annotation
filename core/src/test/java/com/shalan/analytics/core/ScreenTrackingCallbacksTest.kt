@@ -105,7 +105,7 @@ class ScreenTrackingCallbacksTest {
     }
 }
 
-@TrackScreen(screenName = "Test Screen", additionalParams = ["user_id", "user_name"])
+@TrackScreen(screenName = "Test Screen")
 class TestActivity : Activity(), TrackedScreenParamsProvider {
     override fun getTrackedScreenParams(): Map<String, Any> {
         return mapOf("user_id" to "123", "user_name" to "Test User", "extra_param" to "should_be_filtered")
@@ -114,7 +114,7 @@ class TestActivity : Activity(), TrackedScreenParamsProvider {
 
 class UnannotatedActivity : Activity()
 
-@TrackScreen(screenName = "Filtered Screen", additionalParams = ["param1"])
+@TrackScreen(screenName = "Filtered Screen")
 class ActivityWithFilteredParams : Activity(), TrackedScreenParamsProvider {
     override fun getTrackedScreenParams(): Map<String, Any> {
         return mapOf("param1" to "value1", "param2" to "value2")

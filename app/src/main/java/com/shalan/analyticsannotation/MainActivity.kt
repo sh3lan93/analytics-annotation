@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.shalan.analytics.annotation.TrackScreen
 import com.shalan.analytics.core.TrackedScreenParamsProvider
 
-@TrackScreen(screenName = "Main Screen", additionalParams = ["user_id", "user_name"])
+@TrackScreen(screenName = "Main Screen")
 class MainActivity : AppCompatActivity(), TrackedScreenParamsProvider {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

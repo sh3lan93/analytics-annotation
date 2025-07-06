@@ -117,7 +117,7 @@ class ScreenTrackingFragmentLifecycleCallbacksTest {
 
 // Test Fragment Implementations
 
-@TrackScreen(screenName = "Test Fragment", additionalParams = ["param1"])
+@TrackScreen(screenName = "Test Fragment")
 class TestFragment : Fragment(), TrackedScreenParamsProvider {
     override fun getTrackedScreenParams(): Map<String, Any> {
         return mapOf("param1" to "value1", "param2" to "value2")
@@ -129,7 +129,7 @@ class UnannotatedFragment : Fragment()
 @TrackScreen(screenName = "Custom Class Fragment", screenClass = "MyCustomFragment")
 class FragmentWithCustomScreenClass : Fragment()
 
-@TrackScreen(screenName = "Filtered Fragment", additionalParams = ["param1"])
+@TrackScreen(screenName = "Filtered Fragment")
 class FragmentWithFilteredParams : Fragment(), TrackedScreenParamsProvider {
     override fun getTrackedScreenParams(): Map<String, Any> {
         return mapOf("param1" to "value1", "should_be_filtered" to "valueX")

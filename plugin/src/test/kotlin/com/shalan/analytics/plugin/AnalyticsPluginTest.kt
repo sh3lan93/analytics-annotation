@@ -128,7 +128,7 @@ class AnalyticsPluginTest {
     fun `plugin can be applied to non-android projects without errors`() {
         // Should not throw exception even without Android plugin
         project.pluginManager.apply(AnalyticsPlugin::class.java)
-        
+
         assertTrue(project.plugins.hasPlugin(AnalyticsPlugin::class.java))
         assertNotNull(project.extensions.findByType(AnalyticsPluginExtension::class.java))
     }

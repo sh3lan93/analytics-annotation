@@ -134,7 +134,6 @@ abstract class AnalyticsClassVisitorFactory :
         private var hasTrackScreenComposableAnnotation = false
         private var screenName: String? = null
         private var screenClass: String? = null
-        private val additionalParams: MutableList<String> = mutableListOf()
         private val annotationParameters: MutableMap<String, Any> = mutableMapOf()
         private var internalClassName: String = ""
         private var superClassName: String? = null
@@ -143,6 +142,7 @@ abstract class AnalyticsClassVisitorFactory :
         private val methodsToInstrument = mutableListOf<String>()
         private var hasOnCreateMethod = false
         private var onCreateMethodAccess = 0
+        private var implementsTrackedScreenParamsProvider: Boolean = false
 
         override fun visit(
             version: Int,
@@ -162,6 +162,9 @@ abstract class AnalyticsClassVisitorFactory :
             }
             superClassName = superName
 
+            // Check if the class implements TrackedScreenParamsProvider
+            implementsTrackedScreenParamsProvider = interfaces?.contains("com/shalan/analytics/core/TrackedScreenParamsProvider") == true
+
             // Determine class type for proper transformation
             isActivity = isActivityClass(superName)
             isFragment = isFragmentClass(superName)
@@ -172,6 +175,7 @@ abstract class AnalyticsClassVisitorFactory :
                     "AnalyticsClassVisitor: Class $dotClassName - isActivity: $isActivity, isFragment: $isFragment, superName: $superName",
                 )
                 logDebug("AnalyticsClassVisitor: Raw superName: '$superName'")
+                logDebug("AnalyticsClassVisitor: Implements TrackedScreenParamsProvider: $implementsTrackedScreenParamsProvider")
             }
         }
 
@@ -321,7 +325,6 @@ abstract class AnalyticsClassVisitorFactory :
                     TrackingAnnotationInfo(
                         screenName = screenName ?: extractScreenNameFromClassName(className),
                         screenClass = screenClass?.takeIf { it.isNotEmpty() } ?: extractSimpleClassName(className),
-                        additionalParams = additionalParams.toList(),
                         annotationType = TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN,
                         className = className,
                     )
@@ -330,7 +333,6 @@ abstract class AnalyticsClassVisitorFactory :
                     TrackingAnnotationInfo(
                         screenName = screenName ?: extractScreenNameFromClassName(className),
                         screenClass = screenClass?.takeIf { it.isNotEmpty() } ?: extractSimpleClassName(className),
-                        additionalParams = additionalParams.toList(),
                         annotationType = TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE,
                         className = className,
                     )
@@ -543,7 +545,7 @@ abstract class AnalyticsClassVisitorFactory :
             methodVisitor.visitLdcInsn(annotationInfo.screenClass ?: annotationInfo.className)
 
             // Create and push parameters Map
-            generateParametersMap(methodVisitor, annotationInfo.additionalParams)
+            generateParametersMap(methodVisitor)
 
             methodVisitor.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
@@ -560,42 +562,35 @@ abstract class AnalyticsClassVisitorFactory :
             logDebug("AnalyticsClassVisitor: Successfully injected tracking method")
         }
 
-        private fun generateParametersMap(
-            methodVisitor: MethodVisitor,
-            additionalParams: List<String>,
-        ) {
-            if (additionalParams.isEmpty()) {
+        private fun generateParametersMap(methodVisitor: MethodVisitor) {
+            if (implementsTrackedScreenParamsProvider &&
+                (
+                    annotationInfo?.annotationType == TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN ||
+                        annotationInfo?.annotationType == TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE
+                )
+            ) {
+                // For classes that implement TrackedScreenParamsProvider, directly call the interface method
+                // Load 'this' for the interface method call
+                methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
+
+                // Cast this to TrackedScreenParamsProvider
+                methodVisitor.visitTypeInsn(Opcodes.CHECKCAST, "com/shalan/analytics/core/TrackedScreenParamsProvider")
+
+                // Call getTrackedScreenParams() method
+                methodVisitor.visitMethodInsn(
+                    Opcodes.INVOKEINTERFACE,
+                    "com/shalan/analytics/core/TrackedScreenParamsProvider",
+                    "getTrackedScreenParams",
+                    "()Ljava/util/Map;",
+                    true,
+                )
+            } else {
                 // Create empty map: Collections.emptyMap()
                 methodVisitor.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
                     "java/util/Collections",
                     "emptyMap",
                     "()Ljava/util/Map;",
-                    false,
-                )
-            } else {
-                // Generate code to call our helper method
-                // Load 'this' for the helper method call
-                methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
-
-                // Create array of parameter keys
-                methodVisitor.visitLdcInsn(additionalParams.size)
-                methodVisitor.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/String")
-
-                // Populate the array with parameter keys
-                for (i in additionalParams.indices) {
-                    methodVisitor.visitInsn(Opcodes.DUP)
-                    methodVisitor.visitLdcInsn(i)
-                    methodVisitor.visitLdcInsn(additionalParams[i])
-                    methodVisitor.visitInsn(Opcodes.AASTORE)
-                }
-
-                // Call ScreenTracking.createParametersMap(this, paramKeys)
-                methodVisitor.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
-                    "com/shalan/analytics/core/ScreenTracking",
-                    "createParametersMap",
-                    "(Ljava/lang/Object;[Ljava/lang/String;)Ljava/util/Map;",
                     false,
                 )
             }
@@ -672,24 +667,6 @@ abstract class AnalyticsClassVisitorFactory :
                     else -> value?.let { annotationParameters[name ?: ""] = it }
                 }
                 delegate?.visit(name, value)
-            }
-
-            override fun visitArray(name: String?): AnnotationVisitor? {
-                return if (name == "additionalParams") {
-                    object : AnnotationVisitor(api, delegate?.visitArray(name)) {
-                        override fun visit(
-                            name: String?,
-                            value: Any?,
-                        ) {
-                            if (value is String) {
-                                additionalParams.add(value)
-                            }
-                            super.visit(name, value)
-                        }
-                    }
-                } else {
-                    delegate?.visitArray(name)
-                }
             }
 
             override fun visitEnd() {

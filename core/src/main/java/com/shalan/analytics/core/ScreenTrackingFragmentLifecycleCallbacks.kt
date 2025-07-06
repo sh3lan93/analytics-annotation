@@ -63,13 +63,6 @@ class ScreenTrackingFragmentLifecycleCallbacks(
                 emptyMap()
             }
 
-        val filteredParams = mutableMapOf<String, Any>()
-        for (key in annotation.additionalParams) {
-            providedParams[key]?.let { value ->
-                filteredParams[key] = value
-            }
-        }
-
-        analyticsManager.logScreenView(screenName, screenClass, filteredParams)
+        analyticsManager.logScreenView(screenName, screenClass, providedParams)
     }
 }

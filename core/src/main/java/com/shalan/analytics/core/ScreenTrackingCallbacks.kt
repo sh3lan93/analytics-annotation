@@ -68,14 +68,7 @@ class ScreenTrackingCallbacks(
                 emptyMap()
             }
 
-        val filteredParams = mutableMapOf<String, Any>()
-        for (key in annotation.additionalParams) {
-            providedParams[key]?.let { value ->
-                filteredParams[key] = value
-            }
-        }
-
-        analyticsManager.logScreenView(screenName, screenClass, filteredParams)
+        analyticsManager.logScreenView(screenName, screenClass, providedParams)
     }
 
     override fun onActivityStarted(activity: Activity) {}
@@ -89,7 +82,8 @@ class ScreenTrackingCallbacks(
     override fun onActivitySaveInstanceState(
         activity: Activity,
         outState: Bundle,
-    ) {}
+    ) {
+    }
 
     /**
      * Called when an Activity is destroyed.

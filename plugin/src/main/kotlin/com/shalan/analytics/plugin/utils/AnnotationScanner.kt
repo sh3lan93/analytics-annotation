@@ -8,7 +8,6 @@ import org.objectweb.asm.Opcodes
 data class TrackingAnnotationInfo(
     val screenName: String,
     val screenClass: String? = null,
-    val additionalParams: List<String> = emptyList(),
     val annotationType: AnnotationType,
     val className: String,
 ) {
@@ -23,10 +22,15 @@ object AnnotationScanner {
     private const val TRACK_SCREEN_COMPOSABLE_ANNOTATION = "Lcom/shalan/analytics/compose/TrackScreenComposable;"
 
     fun scanClass(classBytes: ByteArray): TrackingAnnotationInfo? {
-        val classReader = ClassReader(classBytes)
-        val visitor = AnnotationScannerVisitor()
-        classReader.accept(visitor, ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
-        return visitor.annotationInfo
+        return try {
+            val classReader = ClassReader(classBytes)
+            val visitor = AnnotationScannerVisitor()
+            classReader.accept(visitor, ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+            visitor.annotationInfo
+        } catch (e: Exception) {
+            // Handle invalid bytecode gracefully
+            null
+        }
     }
 
     private class AnnotationScannerVisitor : ClassVisitor(Opcodes.ASM9) {
@@ -68,42 +72,31 @@ object AnnotationScanner {
         ) : AnnotationVisitor(Opcodes.ASM9) {
             private var screenName: String = ""
             private var screenClass: String? = null
-            private val additionalParams = mutableListOf<String>()
 
             override fun visit(
                 name: String?,
                 value: Any?,
             ) {
                 when (name) {
-                    "screenName" -> screenName = value as String
+                    "value", "screenName" -> screenName = value as String
                     "screenClass" -> screenClass = value as String
                 }
             }
 
-            override fun visitArray(name: String?): AnnotationVisitor? {
-                return if (name == "additionalParams") {
-                    object : AnnotationVisitor(Opcodes.ASM9) {
-                        override fun visit(
-                            name: String?,
-                            value: Any?,
-                        ) {
-                            if (value is String) {
-                                additionalParams.add(value)
-                            }
-                        }
-                    }
-                } else {
-                    null
-                }
-            }
-
             override fun visitEnd() {
-                if (screenName.isNotEmpty()) {
+                // Extract screen name from class name if not provided
+                val finalScreenName =
+                    screenName.ifEmpty {
+                        className.substringAfterLast('.')
+                    }
+
+                val finalScreenClass = screenClass ?: className.substringAfterLast('.')
+
+                if (finalScreenName.isNotEmpty()) {
                     annotationInfo =
                         TrackingAnnotationInfo(
-                            screenName = screenName,
-                            screenClass = screenClass,
-                            additionalParams = additionalParams.toList(),
+                            screenName = finalScreenName,
+                            screenClass = finalScreenClass,
                             annotationType = annotationType,
                             className = className,
                         )

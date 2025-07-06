@@ -8,7 +8,3 @@
 -keep class com.shalan.analytics.core.TrackedScreenParamsProvider { *; }
 -keep class com.shalan.analytics.core.DebugAnalyticsProvider { *; }
 -keep class com.shalan.analytics.core.InMemoryDebugAnalyticsProvider { *; }
--keep class com.shalan.analytics.core.LogcatAnalyticsProvider { *; }
--keep class com.shalan.analytics.core.ScreenTrackingCallbacks { *; }
--keep class com.shalan.analytics.core.ScreenTrackingFragmentLifecycleCallbacks { *; }
--keep class com.shalan.analytics.core.TestAnalyticsManager { *; }

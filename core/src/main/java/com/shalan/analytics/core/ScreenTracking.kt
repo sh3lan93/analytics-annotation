@@ -57,12 +57,8 @@ object ScreenTracking {
      * )
      * ```
      */
-    fun initialize(
-        config: AnalyticsConfig,
-        application: Application? = null,
-    ) {
+    fun initialize(config: AnalyticsConfig) {
         analyticsManager = AnalyticsManagerImpl(config.providers)
-        application?.registerActivityLifecycleCallbacks(ScreenTrackingCallbacks(analyticsManager))
     }
 
     /**

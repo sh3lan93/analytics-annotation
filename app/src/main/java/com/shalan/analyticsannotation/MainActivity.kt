@@ -6,6 +6,7 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.shalan.analytics.annotation.TrackScreen
 import com.shalan.analytics.core.TrackedScreenParamsProvider
+import com.shalan.analyticsannotation.exclude.ExcludeActivity
 
 @TrackScreen(screenName = "Main Screen")
 class MainActivity : AppCompatActivity(), TrackedScreenParamsProvider {
@@ -19,6 +20,9 @@ class MainActivity : AppCompatActivity(), TrackedScreenParamsProvider {
 
         findViewById<Button>(R.id.composable_button).setOnClickListener {
             startActivity(Intent(this, ComposableActivity::class.java))
+        }
+        findViewById<Button>(R.id.exclude_button).setOnClickListener {
+            startActivity(Intent(this, ExcludeActivity::class.java))
         }
     }
 

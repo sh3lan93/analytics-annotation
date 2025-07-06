@@ -12,12 +12,10 @@ import com.shalan.analytics.compose.TrackScreenView
 @TrackScreenComposable(screenName = "Example Composable Screen")
 @Composable
 fun ExampleComposableScreen() {
-    TrackScreenView(screenName = "Example Composable Screen") {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(text = "This is a composable screen")
-        }
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = "This is a composable screen")
     }
 }

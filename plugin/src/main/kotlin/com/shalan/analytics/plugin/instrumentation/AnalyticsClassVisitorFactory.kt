@@ -610,6 +610,12 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Checks if the given class is an Android Activity.
+         * 
+         * @param superName The internal name of the superclass to check
+         * @return True if the class extends from a known Activity class, false otherwise
+         */
         private fun isActivityClass(superName: String?): Boolean {
             return when (superName) {
                 "android/app/Activity",
@@ -621,6 +627,12 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Checks if the given class is an Android Fragment.
+         * 
+         * @param superName The internal name of the superclass to check
+         * @return True if the class extends from a known Fragment class, false otherwise
+         */
         private fun isFragmentClass(superName: String?): Boolean {
             return when (superName) {
                 "androidx/fragment/app/Fragment",
@@ -631,6 +643,15 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Checks if the given method is a Jetpack Compose Composable function.
+         * 
+         * Composable functions are identified by having a Composer parameter in their descriptor.
+         * 
+         * @param methodName The name of the method to check
+         * @param descriptor The method descriptor containing parameter and return types
+         * @return True if the method is a Composable function, false otherwise
+         */
         private fun isComposableMethod(
             methodName: String?,
             descriptor: String?,
@@ -643,6 +664,15 @@ abstract class AnalyticsClassVisitorFactory :
             return hasComposer
         }
 
+        /**
+         * Extracts a readable screen name from a class name.
+         * 
+         * This function takes a fully qualified class name and converts it to a screen name
+         * by removing the package path and common Android class suffixes.
+         * 
+         * @param className The fully qualified class name (e.g., "com.example.MainActivity")
+         * @return A simplified screen name (e.g., "Main" for "MainActivity")
+         */
         private fun extractScreenNameFromClassName(className: String): String {
             return className.substringAfterLast('.')
                 .removeSuffix("Activity")

@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        mavenLocal() // For local plugin development
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -20,4 +21,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Analytics Annotation"
-include(":app", ":annotation", ":core", ":compose")
+include(":app", ":annotation", ":core", ":compose", ":plugin")

@@ -10,7 +10,6 @@ class SampleApp : Application() {
         super.onCreate()
 
         ScreenTracking.initialize(
-            application = this,
             config =
                 analyticsConfig {
                     debugMode = true

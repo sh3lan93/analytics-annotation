@@ -28,6 +28,8 @@
 
         <activity android:name=".ComposableActivity" />
 
+        <activity android:name=".exclude.ExcludeActivity" />
+
     </application>
 
 </manifest>

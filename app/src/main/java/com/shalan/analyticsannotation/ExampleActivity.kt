@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.shalan.analytics.annotation.TrackScreen
 
-@TrackScreen(screenName = "Example Activity")
+@TrackScreen(screenName = "Example Activity", screenClass = "ExampleScreen")
 class ExampleActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

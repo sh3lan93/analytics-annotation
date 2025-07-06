@@ -3,12 +3,26 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     id("org.jlleitschuh.gradle.ktlint")
+    id("com.shalan.analytics") version "1.0.0-SNAPSHOT" // Analytics plugin for automatic screen tracking
 }
 
 ktlint {
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
     }
+}
+
+// Analytics plugin configuration
+analytics {
+    enabled = true
+    debugMode = true
+    trackActivities = true
+    trackFragments = true
+    trackComposables = true
+
+    // Include only our app packages for optimization
+    includePackages = setOf("com.shalan.analyticsannotation")
+    excludePackages = setOf("com.shalan.analyticsannotation.exclude")
 }
 
 android {

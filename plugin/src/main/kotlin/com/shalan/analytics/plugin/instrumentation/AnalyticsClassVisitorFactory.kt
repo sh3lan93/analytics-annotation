@@ -5,6 +5,7 @@ import com.android.build.api.instrumentation.ClassContext
 import com.android.build.api.instrumentation.ClassData
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.shalan.analytics.plugin.utils.ErrorReporter
+import com.shalan.analytics.plugin.utils.PluginLogger
 import com.shalan.analytics.plugin.utils.TrackingAnnotationInfo
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -51,6 +52,9 @@ abstract class AnalyticsClassVisitorFactory :
         nextClassVisitor: ClassVisitor,
     ): ClassVisitor {
         val params = parameters.get()
+        
+        // Initialize PluginLogger with debug mode setting
+        PluginLogger.setDebugMode(params.debugMode.getOrElse(false))
 
         // If plugin is disabled, just pass through
         if (!params.enabled.getOrElse(true)) {
@@ -66,7 +70,7 @@ abstract class AnalyticsClassVisitorFactory :
             )
 
         if (classContext.currentClassData.className.contains("ExampleComposableScreenKt")) {
-            println("FORCE_DEBUG: Created AnalyticsClassVisitor for ${classContext.currentClassData.className}")
+            PluginLogger.forceDebug("Created AnalyticsClassVisitor for ${classContext.currentClassData.className}")
         }
 
         return visitor
@@ -74,19 +78,18 @@ abstract class AnalyticsClassVisitorFactory :
 
     override fun isInstrumentable(classData: ClassData): Boolean {
         val params = parameters.get()
+        
+        // Initialize PluginLogger with debug mode setting
+        PluginLogger.setDebugMode(params.debugMode.getOrElse(false))
 
         // If plugin is disabled, don't instrument anything
         if (!params.enabled.getOrElse(true)) {
-            println("DEBUG: Analytics Annotation Plugin is disabled")
+            PluginLogger.debug("Analytics Annotation Plugin is disabled")
             return false
         }
 
         val className = classData.className.replace('/', '.')
-        println("DEBUG: Checking if class $className is instrumentable")
-
-        if (className.contains("ExampleComposableScreenKt")) {
-            println("FORCE_DEBUG: Found target class in isInstrumentable: $className")
-        }
+        PluginLogger.debug("Checking if class $className is instrumentable")
 
         // Skip system classes
         if (className.startsWith("android.") ||
@@ -94,7 +97,7 @@ abstract class AnalyticsClassVisitorFactory :
             className.startsWith("java.") ||
             className.startsWith("kotlin.")
         ) {
-            println("DEBUG: Skipping system class $className")
+            PluginLogger.debug("Skipping system class $className")
             return false
         }
 
@@ -118,7 +121,7 @@ abstract class AnalyticsClassVisitorFactory :
             if (isExcluded) return false
         }
 
-        println("DEBUG: Class $className is instrumentable")
+        PluginLogger.debug("Class $className is instrumentable")
         return true
     }
 
@@ -249,7 +252,7 @@ abstract class AnalyticsClassVisitorFactory :
                 logDebug("AnalyticsClassVisitor: Wrapping $name method for potential instrumentation")
                 return LifecycleInstrumentingMethodVisitor(api, methodVisitor, name ?: "unknown")
             } else if (isComposableFunction) {
-                println("FORCE_DEBUG: Creating ComposableMethodVisitor for $name")
+                PluginLogger.forceDebug("Creating ComposableMethodVisitor for $name")
                 logDebug("AnalyticsClassVisitor: Wrapping Composable $name method for potential instrumentation")
                 return ComposableMethodVisitor(api, methodVisitor, name ?: "unknown")
             }
@@ -450,7 +453,7 @@ abstract class AnalyticsClassVisitorFactory :
                     "Lcom/shalan/analytics/compose/TrackScreenComposable;" -> {
                         methodHasTrackScreenComposableAnnotation = true
                         hasTrackScreenComposableAnnotation = true
-                        println("FORCE_DEBUG: Found @TrackScreenComposable annotation on method $methodName")
+                        PluginLogger.forceDebug("Found @TrackScreenComposable annotation on method $methodName")
                         logDebug("AnalyticsClassVisitor: Found @TrackScreenComposable annotation on Composable method $methodName")
                         return ComposableAnnotationVisitor(
                             delegate.visitAnnotation(
@@ -498,7 +501,7 @@ abstract class AnalyticsClassVisitorFactory :
                         "value", "screenName" -> {
                             methodScreenName = value as? String
                             screenName = methodScreenName // Also set the class-level screenName
-                            println("FORCE_DEBUG: Extracted screenName: $methodScreenName")
+                            PluginLogger.forceDebug("Extracted screenName: $methodScreenName")
                         }
 
                         else -> value?.let { annotationParameters[name ?: ""] = it }
@@ -724,7 +727,7 @@ abstract class AnalyticsClassVisitorFactory :
 
         private fun logDebug(message: String) {
             if (parameters.debugMode.getOrElse(false)) {
-                println("DEBUG: $message")
+                PluginLogger.debug(message)
             }
         }
 
@@ -732,8 +735,7 @@ abstract class AnalyticsClassVisitorFactory :
             message: String,
             throwable: Throwable? = null,
         ) {
-            println("ERROR: $message")
-            throwable?.printStackTrace()
+            PluginLogger.error(message, throwable)
         }
     }
 }

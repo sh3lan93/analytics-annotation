@@ -362,3 +362,4 @@ ai-instructions-readme.md
 GEMINI.md
 CLAUDE.md
 .mcp.json
+.env

@@ -8,13 +8,14 @@ A powerful, annotation-based screen tracking library for Android that eliminates
 
 ## ✨ Features
 
-- **🎯 Zero Boilerplate**: Just add `@TrackScreen` - no manual lifecycle management
+- **🎯 Zero Boilerplate**: Just add annotations - no manual lifecycle management
 - **⚡ Compile-Time Safety**: Bytecode injection using ASM and modern AGP APIs
-- **🏗️ Architecture Agnostic**: Works with Activities, Fragments, and Jetpack Compose
+- **🏗️ Architecture Agnostic**: Works with Activities, Fragments, Jetpack Compose, and ViewModels
+- **📊 Method-Level Tracking**: Track individual method calls with parameters and custom serialization
 - **🚀 High Performance**: Minimal build overhead with incremental build support
 - **🔧 Highly Configurable**: Fine-grained control over tracking behavior via Gradle plugin
 - **🧪 Testing Friendly**: Built-in debug providers and test utilities
-- **📱 Modern Android**: Supports API 21+ with latest Android development practices
+- **📱 Modern Android**: Supports API 24+ with latest Android development practices
 
 ## 🚀 Quick Start
 
@@ -25,7 +26,7 @@ A powerful, annotation-based screen tracking library for Android that eliminates
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.shalan.analytics") version "1.0.0-SNAPSHOT"
+    id("com.shalan.easyanalytics") version "1.0.0-SNAPSHOT"
 }
 
 // Configure the analytics plugin
@@ -97,6 +98,29 @@ fun SettingsScreen() {
 }
 ```
 
+#### Method-Level Tracking
+Track individual method calls with parameters in any class (ViewModels, Services, etc.):
+
+```kotlin
+@Trackable  // Mark class as containing @Track methods
+class UserViewModel : ViewModel() {
+    
+    @Track(eventName = "user_profile_loaded", includeGlobalParams = true)
+    fun loadUserProfile(
+        @Param("user_id") userId: String,
+        @Param("source") source: String
+    ) {
+        // Method implementation
+        // Analytics call is automatically injected at method start!
+    }
+    
+    @Track(eventName = "settings_changed", includeGlobalParams = false)
+    fun updateSettings(@Param("settings") settings: UserSettings) {
+        // Complex objects are automatically serialized
+    }
+}
+```
+
 ## 📚 Documentation
 
 ### Core Concepts
@@ -107,12 +131,13 @@ The plugin automatically injects tracking code at compile time using bytecode tr
 - **Activities**: Code injected after `super.onCreate(savedInstanceState)`
 - **Fragments**: Code injected after `super.onViewCreated(view, savedInstanceState)`  
 - **Composables**: Tracking call injected at function start
+- **Method Tracking**: Calls injected at the beginning of `@Track` annotated methods
 
 #### Compile-Time Transformation
 The library uses a Gradle plugin approach that:
 
-- Scans for `@TrackScreen` and `@TrackScreenComposable` annotations during build
-- Generates bytecode to inject analytics tracking calls
+- Scans for `@TrackScreen`, `@TrackScreenComposable`, and `@Trackable` annotations during build
+- Generates bytecode to inject analytics tracking calls  
 - Provides zero runtime overhead for tracking
 - Supports incremental builds for fast compilation
 
@@ -227,20 +252,21 @@ assertEquals("Home Screen", debugProvider.getLastEvent()?.parameters?.get("scree
 ### Module Structure
 ```
 analytics-annotation/
-├── annotation/     # Annotations (@TrackScreen)
-├── core/          # Core tracking logic and providers  
+├── annotation/     # Annotations (@TrackScreen, @Trackable, @Track, @Param)
+├── core/          # Core tracking logic, providers, and method tracking
 ├── compose/       # Jetpack Compose integration (@TrackScreenComposable)
 ├── plugin/        # Gradle plugin for bytecode injection
-└── app/          # Sample application
+└── app/          # Sample application with examples
 ```
 
 ### Build Integration
 The plugin integrates seamlessly with Android builds:
 
-1. **Annotation Scanning**: Detects `@TrackScreen` annotations
+1. **Annotation Scanning**: Detects `@TrackScreen`, `@TrackScreenComposable`, and `@Trackable` annotations
 2. **Bytecode Transformation**: Injects tracking calls using ASM
-3. **Incremental Support**: Only processes changed classes
-4. **Cache Compatible**: Works with Gradle build cache
+3. **Method Instrumentation**: Processes `@Track` methods with parameter serialization
+4. **Incremental Support**: Only processes changed classes
+5. **Cache Compatible**: Works with Gradle build cache
 
 ## 🧪 Testing
 

@@ -2,11 +2,11 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "1.3.0"
+    id("com.gradle.plugin-publish") version "2.0.0"
     id("org.jlleitschuh.gradle.ktlint")
 }
 
-group = "com.shalan.analytics"
+group = "com.shalan.easyanalytics"
 version = "1.0.0-SNAPSHOT"
 
 tasks.withType<ProcessResources> {
@@ -23,12 +23,12 @@ gradlePlugin {
 
     plugins {
         create("analyticsPlugin") {
-            id = "com.shalan.analytics"
+            id = "com.shalan.easyanalytics"
             implementationClass = "com.shalan.analytics.plugin.AnalyticsPlugin"
-            displayName = "Analytics Screen Tracking Plugin"
-            description = "Automatically injects screen tracking code into Android Activities, Fragments, " +
-                "and Composables at compile time using bytecode manipulation. Supports Activities, " +
-                "Fragments, and Jetpack Compose with zero boilerplate."
+            displayName = "Easy Analytics Plugin"
+            description = "Automatically injects analytics tracking code into Android Activities, Fragments, " +
+                "Composables, and methods at compile time using bytecode transformation. Supports screen-level " +
+                "tracking and method-level event tracking with parameter serialization, all with zero boilerplate."
             tags = listOf("android", "analytics", "tracking", "bytecode", "annotation", "compose")
         }
     }

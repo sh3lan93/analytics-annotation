@@ -124,4 +124,93 @@ class AnalyticsPluginExtensionTest {
         assertFalse(extension.trackActivities) // Should remain false
         assertFalse(extension.trackFragments) // Should remain false
     }
+
+    @Test
+    fun `extension has methodTracking with correct defaults`() {
+        val extension = AnalyticsPluginExtension()
+
+        assertNotNull(extension.methodTracking)
+        assertTrue(extension.methodTracking.enabled)
+        assertEquals(10, extension.methodTracking.maxParametersPerMethod)
+        assertTrue(extension.methodTracking.validateAnnotations)
+        assertTrue(extension.methodTracking.excludeMethods.isEmpty())
+        assertTrue(extension.methodTracking.includeClassPatterns.isEmpty())
+        assertTrue(extension.methodTracking.excludeClassPatterns.isEmpty())
+    }
+
+    @Test
+    fun `methodTracking DSL function works correctly`() {
+        val extension = AnalyticsPluginExtension()
+
+        extension.methodTracking {
+            enabled = false
+            maxParametersPerMethod = 15
+            validateAnnotations = false
+            excludeMethods = setOf("excludeMe", "andMe")
+            includeClassPatterns = setOf("com.app.*", "*.Activity")
+            excludeClassPatterns = setOf("com.test.*")
+        }
+
+        assertFalse(extension.methodTracking.enabled)
+        assertEquals(15, extension.methodTracking.maxParametersPerMethod)
+        assertFalse(extension.methodTracking.validateAnnotations)
+        assertEquals(setOf("excludeMe", "andMe"), extension.methodTracking.excludeMethods)
+        assertEquals(setOf("com.app.*", "*.Activity"), extension.methodTracking.includeClassPatterns)
+        assertEquals(setOf("com.test.*"), extension.methodTracking.excludeClassPatterns)
+    }
+
+    @Test
+    fun `methodTracking toString includes all properties`() {
+        val extension = AnalyticsPluginExtension()
+
+        extension.methodTracking {
+            enabled = false
+            maxParametersPerMethod = 20
+            validateAnnotations = false
+            excludeMethods = setOf("test")
+            includeClassPatterns = setOf("com.*")
+            excludeClassPatterns = setOf("*.Test")
+        }
+
+        val toString = extension.toString()
+        assertTrue(toString.contains("methodTracking="))
+
+        val methodTrackingString = extension.methodTracking.toString()
+        assertTrue(methodTrackingString.contains("enabled=false"))
+        assertTrue(methodTrackingString.contains("maxParametersPerMethod=20"))
+        assertTrue(methodTrackingString.contains("validateAnnotations=false"))
+        assertTrue(methodTrackingString.contains("excludeMethods=[test]"))
+        assertTrue(methodTrackingString.contains("includeClassPatterns=[com.*]"))
+        assertTrue(methodTrackingString.contains("excludeClassPatterns=[*.Test]"))
+    }
+
+    @Test
+    fun `methodTracking instances are independent`() {
+        val extension1 = AnalyticsPluginExtension()
+        val extension2 = AnalyticsPluginExtension()
+
+        extension1.methodTracking {
+            enabled = false
+            maxParametersPerMethod = 5
+        }
+
+        // extension2 should maintain defaults
+        assertTrue(extension2.methodTracking.enabled)
+        assertEquals(10, extension2.methodTracking.maxParametersPerMethod)
+    }
+
+    @Test
+    fun `MethodTrackingExtension handles edge case parameter values`() {
+        val extension = AnalyticsPluginExtension()
+
+        extension.methodTracking {
+            maxParametersPerMethod = 0 // Edge case: no parameters
+            excludeMethods = emptySet() // Edge case: empty set
+            includeClassPatterns = setOf("") // Edge case: empty pattern
+        }
+
+        assertEquals(0, extension.methodTracking.maxParametersPerMethod)
+        assertTrue(extension.methodTracking.excludeMethods.isEmpty())
+        assertEquals(setOf(""), extension.methodTracking.includeClassPatterns)
+    }
 }

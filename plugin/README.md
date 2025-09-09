@@ -1,6 +1,6 @@
-# Analytics Annotation Gradle Plugin
+# Easy Analytics Gradle Plugin
 
-This Gradle plugin provides automatic analytics tracking injection for Android applications using bytecode transformation. It processes classes annotated with `@TrackScreen` or `@TrackScreenComposable` and generates the necessary analytics tracking code at build time.
+This Gradle plugin provides automatic analytics tracking injection for Android applications using bytecode transformation. It processes classes annotated with `@TrackScreen`, `@TrackScreenComposable`, or `@Trackable` and generates the necessary analytics tracking code at build time.
 
 ## Overview
 
@@ -16,9 +16,10 @@ The plugin uses ASM (Java bytecode manipulation framework) to automatically inje
 4. **Utils Package** - Supporting utilities for error reporting and validation
 
 ### Supported Targets
-- **Activities**: Injects tracking after `super.onCreate()`
-- **Fragments**: Injects tracking after `super.onViewCreated()`
-- **Composables**: Injects tracking at function start
+- **Activities**: Injects screen tracking after `super.onCreate()`
+- **Fragments**: Injects screen tracking after `super.onViewCreated()`
+- **Composables**: Injects screen tracking at function start
+- **Methods**: Injects event tracking at method entry for `@Track` annotated methods in `@Trackable` classes
 
 ## Configuration
 
@@ -26,7 +27,7 @@ Add the plugin to your `app/build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("com.shalan.analytics") version "1.0.0-SNAPSHOT"
+    id("com.shalan.easyanalytics") version "1.0.0-SNAPSHOT"
 }
 
 analytics {
@@ -41,6 +42,11 @@ analytics {
     
     // Optional: Exclude specific packages
     excludePackages = setOf("com.yourapp.internal")
+    
+    // Method tracking configuration
+    methodTrackingEnabled = true     // Enable method-level tracking
+    maxParametersPerMethod = 10      // Max parameters to track per method
+    excludeMethods = setOf("toString", "hashCode", "equals")
 }
 ```
 
@@ -79,9 +85,85 @@ fun SettingsScreen() {
 }
 ```
 
+### Method-Level Event Tracking
+Track individual method calls with parameters using `@Trackable` and `@Track`:
+
+```kotlin
+@Trackable  // Marks class as containing @Track methods
+class UserViewModel : ViewModel() {
+    
+    @Track(eventName = "user_profile_loaded", includeGlobalParams = true)
+    fun loadUserProfile(
+        @Param("user_id") userId: String,
+        @Param("source") source: String
+    ) {
+        // Method implementation
+        // Analytics call is automatically injected at method start
+    }
+    
+    @Track(eventName = "settings_updated", includeGlobalParams = false)
+    fun updateSettings(@Param("settings") settings: UserSettings) {
+        // Complex objects are automatically serialized to JSON
+    }
+}
+```
+
+### Method Tracking in Composables
+```kotlin
+@Trackable
+object ComposableTracker {
+    @Track(eventName = "button_clicked", includeGlobalParams = true)
+    fun handleButtonClick(
+        @Param("button_id") buttonId: String,
+        @Param("screen_context") context: String
+    ) {
+        // Button click logic
+    }
+}
+
+@Composable
+fun MyScreen() {
+    Button(onClick = { 
+        ComposableTracker.handleButtonClick("save_button", "profile_screen")
+    }) {
+        Text("Save")
+    }
+}
+```
+
+### Parameter Limit Configuration
+The plugin respects the `maxParametersPerMethod` configuration to avoid performance issues:
+
+```kotlin
+@Trackable
+class DataProcessor {
+    // This method has many parameters, but plugin will only track first 10 (default limit)
+    @Track(eventName = "complex_processing", includeGlobalParams = true)
+    fun processComplexData(
+        @Param("param1") p1: String,
+        @Param("param2") p2: String,
+        @Param("param3") p3: String,
+        @Param("param4") p4: String,
+        @Param("param5") p5: String,
+        @Param("param6") p6: String,
+        @Param("param7") p7: String,
+        @Param("param8") p8: String,
+        @Param("param9") p9: String,
+        @Param("param10") p10: String,
+        @Param("param11") p11: String,  // This will be ignored (beyond limit)
+        @Param("param12") p12: String,  // This will be ignored (beyond limit)
+        nonTrackedParam: String         // Not annotated, so ignored
+    ) {
+        // Only first 10 @Param annotated parameters will be tracked
+        // Configure via: maxParametersPerMethod = 15 to track more
+    }
+}
+```
+
 ## Generated Code
 
-The plugin generates a private method `__injectAnalyticsTracking()` in each annotated class:
+### Screen Tracking
+The plugin generates a private method `__injectAnalyticsTracking()` in each screen-annotated class:
 
 ```kotlin
 // Generated for Activities/Fragments
@@ -100,6 +182,29 @@ private static fun __injectAnalyticsTracking() {
         screenClass = "MyComposableKt",
         parameters = Collections.emptyMap()
     )
+}
+```
+
+### Method Tracking
+For `@Track` annotated methods, the plugin injects analytics calls at method entry:
+
+```kotlin
+// Original method
+@Track(eventName = "user_profile_loaded", includeGlobalParams = true)
+fun loadUserProfile(@Param("user_id") userId: String, @Param("source") source: String) {
+    // Method implementation
+}
+
+// Becomes (conceptually):
+fun loadUserProfile(userId: String, source: String) {
+    // Injected tracking call
+    MethodTrackingManager.track(
+        "user_profile_loaded",
+        mapOf("user_id" to userId, "source" to source),
+        true
+    )
+    
+    // Original method implementation
 }
 ```
 
@@ -126,14 +231,17 @@ This approach ensures that:
 - Only processes enabled class types
 
 ### 2. Annotation Discovery
-- Scans for `@TrackScreen` and `@TrackScreenComposable` annotations
-- Extracts annotation parameters (screenName, screenClass, additionalParams)
-- Determines class type (Activity/Fragment/Composable)
+- Scans for `@TrackScreen`, `@TrackScreenComposable`, and `@Trackable` annotations
+- Extracts annotation parameters (screenName, screenClass, additionalParams for screen tracking)
+- Identifies `@Track` annotated methods within `@Trackable` classes
+- Processes `@Param` annotations on method parameters
+- Determines class type (Activity/Fragment/Composable/Trackable)
 
 ### 3. Method Injection
-- **Activities**: Injects after `super.onCreate(savedInstanceState)`
-- **Fragments**: Injects after `super.onViewCreated(view, savedInstanceState)`
-- **Composables**: Injects at the beginning of the function
+- **Activities**: Injects screen tracking after `super.onCreate(savedInstanceState)`
+- **Fragments**: Injects screen tracking after `super.onViewCreated(view, savedInstanceState)`
+- **Composables**: Injects screen tracking at the beginning of the function
+- **@Track Methods**: Injects event tracking calls at method entry with parameter collection
 
 ### 4. Bytecode Generation
 - Creates `__injectAnalyticsTracking()` method

@@ -132,4 +132,105 @@ class AnalyticsPluginTest {
         assertTrue(project.plugins.hasPlugin(AnalyticsPlugin::class.java))
         assertNotNull(project.extensions.findByType(AnalyticsPluginExtension::class.java))
     }
+
+    @Test
+    fun `extension methodTracking configuration is accessible`() {
+        project.pluginManager.apply(AnalyticsPlugin::class.java)
+
+        val extension = project.extensions.getByType(AnalyticsPluginExtension::class.java)
+
+        // Verify default method tracking configuration
+        assertTrue(extension.methodTracking.enabled)
+        assertEquals(10, extension.methodTracking.maxParametersPerMethod)
+        assertTrue(extension.methodTracking.validateAnnotations)
+        assertTrue(extension.methodTracking.excludeMethods.isEmpty())
+        assertTrue(extension.methodTracking.includeClassPatterns.isEmpty())
+        assertTrue(extension.methodTracking.excludeClassPatterns.isEmpty())
+    }
+
+    @Test
+    fun `extension methodTracking can be configured via DSL`() {
+        project.pluginManager.apply(AnalyticsPlugin::class.java)
+
+        val extension = project.extensions.getByType(AnalyticsPluginExtension::class.java)
+
+        extension.methodTracking {
+            enabled = false
+            maxParametersPerMethod = 20
+            validateAnnotations = false
+            excludeMethods = setOf("excludedMethod1", "excludedMethod2")
+            includeClassPatterns = setOf("com.app.*", "*.Activity")
+            excludeClassPatterns = setOf("com.test.*", "*.Test")
+        }
+
+        // Verify configuration was applied
+        assertFalse(extension.methodTracking.enabled)
+        assertEquals(20, extension.methodTracking.maxParametersPerMethod)
+        assertFalse(extension.methodTracking.validateAnnotations)
+        assertEquals(setOf("excludedMethod1", "excludedMethod2"), extension.methodTracking.excludeMethods)
+        assertEquals(setOf("com.app.*", "*.Activity"), extension.methodTracking.includeClassPatterns)
+        assertEquals(setOf("com.test.*", "*.Test"), extension.methodTracking.excludeClassPatterns)
+    }
+
+    @Test
+    fun `extension methodTracking configuration is independent between instances`() {
+        val project2 = ProjectBuilder.builder().build()
+
+        project.pluginManager.apply(AnalyticsPlugin::class.java)
+        project2.pluginManager.apply(AnalyticsPlugin::class.java)
+
+        val extension1 = project.extensions.getByType(AnalyticsPluginExtension::class.java)
+        val extension2 = project2.extensions.getByType(AnalyticsPluginExtension::class.java)
+
+        extension1.methodTracking {
+            enabled = false
+            maxParametersPerMethod = 5
+        }
+
+        // extension2 should maintain defaults
+        assertTrue(extension2.methodTracking.enabled)
+        assertEquals(10, extension2.methodTracking.maxParametersPerMethod)
+
+        // extension1 should have the configured values
+        assertFalse(extension1.methodTracking.enabled)
+        assertEquals(5, extension1.methodTracking.maxParametersPerMethod)
+    }
+
+    @Test
+    fun `extension methodTracking handles edge case configurations`() {
+        project.pluginManager.apply(AnalyticsPlugin::class.java)
+
+        val extension = project.extensions.getByType(AnalyticsPluginExtension::class.java)
+
+        extension.methodTracking {
+            maxParametersPerMethod = 0 // Edge case: no parameters
+            excludeMethods = emptySet() // Edge case: explicitly empty
+            includeClassPatterns = setOf("") // Edge case: empty pattern
+            excludeClassPatterns = setOf("*") // Edge case: exclude everything
+        }
+
+        assertEquals(0, extension.methodTracking.maxParametersPerMethod)
+        assertTrue(extension.methodTracking.excludeMethods.isEmpty())
+        assertEquals(setOf(""), extension.methodTracking.includeClassPatterns)
+        assertEquals(setOf("*"), extension.methodTracking.excludeClassPatterns)
+    }
+
+    @Test
+    fun `extension toString includes methodTracking information`() {
+        project.pluginManager.apply(AnalyticsPlugin::class.java)
+
+        val extension = project.extensions.getByType(AnalyticsPluginExtension::class.java)
+
+        extension.methodTracking {
+            enabled = false
+            maxParametersPerMethod = 15
+        }
+
+        val toStringResult = extension.toString()
+        assertTrue(toStringResult.contains("methodTracking="))
+
+        val methodTrackingString = extension.methodTracking.toString()
+        assertTrue(methodTrackingString.contains("enabled=false"))
+        assertTrue(methodTrackingString.contains("maxParametersPerMethod=15"))
+    }
 }

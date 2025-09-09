@@ -14,6 +14,7 @@ class TestAnalyticsManager : AnalyticsManager {
     override fun logEvent(
         eventName: String,
         parameters: Map<String, Any>,
+        includeGlobalParameters: Boolean,
     ) {
         // Not needed for testing
     }

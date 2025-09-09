@@ -6,8 +6,8 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
-group = "com.shalan.easyanalytics"
-version = "1.0.0-SNAPSHOT"
+group = "dev.moshalan"
+version = "1.0.0"
 
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -18,12 +18,12 @@ kotlin {
 }
 
 gradlePlugin {
-    website = "https://github.com/shalan/analytics-annotation"
-    vcsUrl = "https://github.com/shalan/analytics-annotation.git"
+    website = "https://github.com/sh3lan93/analytics-annotation"
+    vcsUrl = "https://github.com/sh3lan93/analytics-annotation"
 
     plugins {
-        create("analyticsPlugin") {
-            id = "com.shalan.easyanalytics"
+        create("easyAnalyticsPlugin") {
+            id = "dev.moshalan.easyanalytics"
             implementationClass = "com.shalan.analytics.plugin.AnalyticsPlugin"
             displayName = "Easy Analytics Plugin"
             description = "Automatically injects analytics tracking code into Android Activities, Fragments, " +

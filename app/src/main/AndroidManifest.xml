@@ -29,6 +29,10 @@
         <activity android:name=".ComposableActivity" />
 
         <activity android:name=".exclude.ExcludeActivity" />
+        
+        <activity android:name=".MethodTrackingExampleActivity" />
+        
+        <activity android:name=".UserProfileActivity" />
 
     </application>
 

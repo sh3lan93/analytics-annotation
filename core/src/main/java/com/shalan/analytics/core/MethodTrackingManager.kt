@@ -27,9 +27,8 @@ object MethodTrackingManager {
 
         // Register default parameter serializers
         if (serializers.isEmpty()) {
-            serializers.add(JsonParameterSerializer()) // High priority for data classes
-            serializers.add(PrimitiveParameterSerializer())
-            serializers.add(SerializableParameterSerializer())
+            serializers.add(PrimitiveParameterSerializer()) // Handle primitives first
+            serializers.add(JsonParameterSerializer()) // Handle complex objects with JSON serialization
         }
     }
 

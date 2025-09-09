@@ -16,6 +16,7 @@ import androidx.annotation.VisibleForTesting
  */
 object ScreenTracking {
     private lateinit var analyticsManager: AnalyticsManager
+    private lateinit var config: AnalyticsConfig
 
     // For testing purposes only
     @VisibleForTesting
@@ -58,7 +59,21 @@ object ScreenTracking {
      * ```
      */
     fun initialize(config: AnalyticsConfig) {
+        this.config = config
         analyticsManager = AnalyticsManagerImpl(config.providers)
+
+        // Initialize method tracking for ASM-generated calls
+        if (config.methodTracking.enabled) {
+            MethodTrackingManager.initialize(
+                analyticsManager = analyticsManager,
+                errorHandler = config.methodTracking.errorHandler,
+            )
+
+            // Register custom parameter serializers
+            config.methodTracking.customSerializers.forEach { serializer ->
+                MethodTrackingManager.addParameterSerializer(serializer)
+            }
+        }
     }
 
     /**
@@ -111,6 +126,18 @@ object ScreenTracking {
         if (isInitialized()) {
             getManager().logScreenView(screenName, "", parameters)
         }
+    }
+
+    /**
+     * Gets the method tracking configuration.
+     * This method is used by ASM-generated code to access runtime configuration.
+     *
+     * @return The [MethodTrackingConfig] instance if initialized, null otherwise.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @JvmStatic
+    fun getMethodTrackingConfig(): MethodTrackingConfig? {
+        return if (::config.isInitialized) config.methodTracking else null
     }
 
     /**

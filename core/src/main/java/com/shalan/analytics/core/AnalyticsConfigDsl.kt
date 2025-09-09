@@ -11,3 +11,29 @@ package com.shalan.analytics.core
 fun analyticsConfig(block: AnalyticsConfig.() -> Unit): AnalyticsConfig {
     return AnalyticsConfig().apply(block)
 }
+
+/**
+ * A Kotlin DSL function for configuring method tracking within an [AnalyticsConfig] block.
+ * This function provides a concise way to configure method-level tracking options.
+ *
+ * @param block A lambda with [MethodTrackingConfig] as its receiver for configuration.
+ *
+ * ## Usage Example:
+ * ```kotlin
+ * val config = analyticsConfig {
+ *     debugMode = true
+ *     providers.add(LogcatAnalyticsProvider())
+ *
+ *     methodTracking {
+ *         enabled = true
+ *         errorHandler = { throwable ->
+ *             Log.e("Analytics", "Method tracking error", throwable)
+ *         }
+ *         customSerializers.add(MyCustomParameterSerializer())
+ *     }
+ * }
+ * ```
+ */
+fun AnalyticsConfig.methodTracking(block: MethodTrackingConfig.() -> Unit) {
+    methodTracking.apply(block)
+}

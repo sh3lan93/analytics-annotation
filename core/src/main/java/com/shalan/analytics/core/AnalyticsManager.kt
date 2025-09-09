@@ -27,6 +27,7 @@ interface AnalyticsManager {
     fun logEvent(
         eventName: String,
         parameters: Map<String, Any>,
+        includeGlobalParameters: Boolean = true,
     )
 
     /**

@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/shalan/analytics-annotation)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0--SNAPSHOT-orange.svg)](https://github.com/shalan/analytics-annotation/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/shalan/analytics-annotation/releases)
 
 A powerful, annotation-based screen tracking library for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
 
@@ -26,7 +26,7 @@ A powerful, annotation-based screen tracking library for Android that eliminates
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.shalan.easyanalytics") version "1.0.0-SNAPSHOT"
+    id("com.shalan.easyanalytics") version "1.0.0"
 }
 
 // Configure the analytics plugin
@@ -39,8 +39,8 @@ analytics {
 }
 
 dependencies {
-    implementation("com.shalan.analytics:core:1.0.0-SNAPSHOT")
-    implementation("com.shalan.analytics:compose:1.0.0-SNAPSHOT") // For Compose support
+    implementation("com.shalan.analytics:core:1.0.0")
+    implementation("com.shalan.analytics:compose:1.0.0") // For Compose support
 }
 ```
 
@@ -232,21 +232,6 @@ DEBUG: AnalyticsClassVisitor: Injecting Activity tracking for "Home Screen"
 DEBUG: AnalyticsClassVisitor: Generated tracking method successfully
 ```
 
-#### Test Providers
-Use built-in test providers for verification:
-
-```kotlin
-// In tests
-val debugProvider = InMemoryDebugAnalyticsProvider()
-ScreenTracking.initialize(context) {
-    providers.add(debugProvider)
-}
-
-// Verify tracking calls
-assertEquals("screen_view", debugProvider.getLastEvent()?.eventName)
-assertEquals("Home Screen", debugProvider.getLastEvent()?.parameters?.get("screen_name"))
-```
-
 ## 🏗️ Architecture
 
 ### Module Structure
@@ -268,26 +253,6 @@ The plugin integrates seamlessly with Android builds:
 4. **Incremental Support**: Only processes changed classes
 5. **Cache Compatible**: Works with Gradle build cache
 
-## 🧪 Testing
-
-### Unit Testing
-```kotlin
-@Test
-fun `verify screen tracking`() {
-    val mockProvider = mockk<AnalyticsProvider>()
-    ScreenTracking.initialize(context) {
-        providers.add(mockProvider)
-    }
-    
-    // Your test logic
-    
-    verify { mockProvider.logEvent("screen_view", any()) }
-}
-```
-
-### Integration Testing
-The sample app includes comprehensive integration tests demonstrating real-world usage patterns.
-
 ## ⚡ Performance
 
 Performance benchmarks on the sample app:
@@ -300,20 +265,6 @@ Performance benchmarks on the sample app:
 | Memory Overhead | Minimal | ✅ Minimal |
 
 The plugin only processes annotated classes during build time, ensuring minimal performance impact.
-
-## 🔄 Migration Guide
-
-### From Manual Tracking
-1. Apply the analytics plugin
-2. Keep existing `ScreenTracking.initialize()` call
-3. Add `@TrackScreen` annotations
-4. Remove manual tracking calls
-5. Test that tracking still works
-
-### From Other Analytics Libraries
-1. Create custom `AnalyticsProvider` implementations
-2. Replace existing tracking calls with annotations
-3. Gradually migrate screen by screen
 
 ## 🤝 Contributing
 

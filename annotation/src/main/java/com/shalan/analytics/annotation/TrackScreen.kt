@@ -1,7 +1,7 @@
 package com.shalan.analytics.annotation
 
 /**
- * Annotation to mark an Activity, Fragment or Composable functions for automatic screen tracking.
+ * Annotation to mark an Activity or Fragment for automatic screen tracking.
  * When applied, it will automatically log a screen view event with the provided screen name,
  * screen class, and additional parameters.
  *
@@ -10,7 +10,7 @@ package com.shalan.analytics.annotation
  *   the simple name of the annotated class will be used.
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 annotation class TrackScreen(
     val screenName: String,
     val screenClass: String = "",

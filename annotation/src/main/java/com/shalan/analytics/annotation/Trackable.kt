@@ -28,5 +28,5 @@ package com.shalan.analytics.annotation
  * - This is a compile-time annotation and has no runtime overhead
  */
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 annotation class Trackable

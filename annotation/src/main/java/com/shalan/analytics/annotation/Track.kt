@@ -13,7 +13,7 @@ package com.shalan.analytics.annotation
  *   in the event. Defaults to true.
  */
 @Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 annotation class Track(
     val eventName: String,
     val includeGlobalParams: Boolean = true,

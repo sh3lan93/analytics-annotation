@@ -8,7 +8,7 @@ package com.shalan.analytics.annotation
  * @property name The name for the parameter in the analytics event.
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 annotation class Param(
     val name: String,
 )

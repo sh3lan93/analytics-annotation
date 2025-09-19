@@ -1,10 +1,10 @@
 # Analytics Annotation Library
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/shalan/analytics-annotation)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/shalan/analytics-annotation/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation/releases)
 
-A powerful, annotation-based screen tracking library for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
+A powerful, annotation-based tracking library for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
 
 ## ✨ Features
 
@@ -26,7 +26,7 @@ A powerful, annotation-based screen tracking library for Android that eliminates
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.shalan.easyanalytics") version "1.0.0"
+    id("dev.moshalan.easyanalytics") version "1.0.0"
 }
 
 // Configure the analytics plugin
@@ -39,8 +39,8 @@ analytics {
 }
 
 dependencies {
-    implementation("com.shalan.analytics:core:1.0.0")
-    implementation("com.shalan.analytics:compose:1.0.0") // For Compose support
+    implementation("dev.moshalan.easy-analytics-core:1.0.0")
+    implementation("dev.moshalan.easy-analytics-core:1.0.0") // For Compose support
 }
 ```
 

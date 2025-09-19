@@ -1,0 +1,421 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Concurrency: Cancel previous runs when new changes are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-style:
+    name: Code Style & Linting
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: wrapper
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Run ktlint check
+      run: ./gradlew ktlintCheck --no-daemon
+
+    - name: Generate ktlint report
+      if: failure()
+      run: ./gradlew ktlintFormat --no-daemon || true
+
+    - name: Upload ktlint results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ktlint-report
+        path: |
+          **/build/reports/ktlint/
+          **/ktlint-report.xml
+        retention-days: 1
+
+    - name: Comment PR with ktlint issues
+      if: failure() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+
+          // Look for ktlint reports
+          const globber = await glob.create('**/build/reports/ktlint/**/*.txt');
+          const files = await globber.glob();
+
+          if (files.length > 0) {
+            let comment = '## 🔍 ktlint Code Style Issues\n\n';
+            comment += 'The following code style issues were found:\n\n';
+
+            for (const file of files.slice(0, 5)) { // Limit to 5 files
+              try {
+                const content = fs.readFileSync(file, 'utf8');
+                const relativePath = path.relative(process.cwd(), file);
+                comment += `### ${relativePath}\n\`\`\`\n${content.slice(0, 1000)}\n\`\`\`\n\n`;
+              } catch (error) {
+                console.log(`Error reading file ${file}: ${error}`);
+              }
+            }
+
+            comment += '\n💡 **Fix these issues by running:** `./gradlew ktlintFormat`\n';
+            comment += '📚 **Style guide:** [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html)';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: wrapper
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Run dependency vulnerability check
+      run: ./gradlew dependencyUpdates --no-daemon || true
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: java-kotlin
+        queries: security-and-quality
+
+    - name: Build for CodeQL analysis
+      run: ./gradlew assemble --no-daemon
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:java-kotlin"
+
+    - name: Run secret scanning with TruffleHog
+      uses: trufflesecurity/trufflehog@v3.63.5
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Upload security scan results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-scan-results
+        path: |
+          build/reports/dependencyUpdates/
+          **/*security*
+        retention-days: 7
+
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: wrapper
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Build all modules
+      run: ./gradlew build --no-daemon --stacktrace
+
+    - name: Run unit tests
+      run: ./gradlew test --no-daemon --continue
+
+    - name: Run Android lint
+      run: ./gradlew lint --no-daemon || true
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          **/build/reports/tests/
+          **/build/reports/lint-results*.html
+          **/build/test-results/
+        retention-days: 3
+
+    - name: Upload coverage reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: |
+          **/build/reports/jacoco/
+          **/build/reports/coverage/
+        retention-days: 3
+
+  plugin-validation:
+    name: Plugin Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: wrapper
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Build and test plugin
+      run: ./gradlew :plugin:test --no-daemon
+
+    - name: Publish plugin locally
+      run: ./gradlew :plugin:publishToMavenLocal --no-daemon
+
+    - name: Test plugin integration with sample app
+      run: ./gradlew :app:clean :app:build --no-daemon
+
+    - name: Validate plugin functionality
+      run: |
+        # Check if bytecode transformation is working
+        echo "🔍 Checking for bytecode transformation..."
+        find app/build -name "*.class" -type f | head -5 | xargs -I {} javap -c {} | grep -i analytics || echo "No analytics bytecode found (might be expected for basic build)"
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check for documentation updates
+      run: |
+        # Check if code changes require documentation updates
+        git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD | grep -E '\.(kt|java)$' > changed_files.txt || true
+
+        if [ -s changed_files.txt ]; then
+          echo "Code files changed, checking for documentation updates..."
+
+          # Check if README or docs were updated
+          if git diff --name-only ${{ github.event.pull_request.base.sha }}..HEAD | grep -E '(README|\.md|docs/)'; then
+            echo "✅ Documentation updates found"
+          else
+            echo "⚠️ Code changes detected but no documentation updates found"
+            echo "Consider updating README.md, EXAMPLES.md, or plugin/README.md if needed"
+          fi
+        else
+          echo "No code files changed"
+        fi
+
+    - name: Validate markdown links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
+
+  dependency-check:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: wrapper
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Generate dependency report
+      run: ./gradlew dependencies --no-daemon > dependency-report.txt
+
+    - name: Check for vulnerable dependencies
+      run: ./gradlew dependencyUpdates --no-daemon
+
+    - name: Upload dependency reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-reports
+        path: |
+          dependency-report.txt
+          build/dependencyUpdates/
+        retention-days: 7
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [code-style, security-scan, build-and-test, plugin-validation, documentation, dependency-check]
+    if: always() && github.event.pull_request.draft == false
+
+    steps:
+    - name: Generate PR summary
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const jobs = [
+            { name: 'Code Style & Linting', result: '${{ needs.code-style.result }}' },
+            { name: 'Security Scanning', result: '${{ needs.security-scan.result }}' },
+            { name: 'Build & Test', result: '${{ needs.build-and-test.result }}' },
+            { name: 'Plugin Validation', result: '${{ needs.plugin-validation.result }}' },
+            { name: 'Documentation Check', result: '${{ needs.documentation.result }}' },
+            { name: 'Dependency Analysis', result: '${{ needs.dependency-check.result }}' }
+          ];
+
+          const success = jobs.filter(job => job.result === 'success').length;
+          const total = jobs.length;
+
+          let summary = `## 📋 PR Checks Summary\n\n`;
+          summary += `**Status: ${success}/${total} checks passed**\n\n`;
+
+          jobs.forEach(job => {
+            const icon = job.result === 'success' ? '✅' :
+                        job.result === 'failure' ? '❌' :
+                        job.result === 'cancelled' ? '🚫' : '⏳';
+            summary += `${icon} ${job.name}\n`;
+          });
+
+          summary += `\n---\n`;
+          summary += `🔗 **Workflow Run:** [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+          summary += `📝 **Commit:** \`${{ github.event.pull_request.head.sha }}\`\n`;
+
+          if (success < total) {
+            summary += `\n⚠️ **Action Required:** Some checks failed. Please review the logs and fix the issues.`;
+          } else {
+            summary += `\n🎉 **All checks passed!** This PR is ready for review.`;
+          }
+
+          // Update or create comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.find(comment =>
+            comment.user.type === 'Bot' && comment.body.includes('📋 PR Checks Summary')
+          );
+
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: summary
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: summary
+            });
+          }

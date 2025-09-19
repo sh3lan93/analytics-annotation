@@ -22,10 +22,57 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Open Composable"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/exclude_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/example_button"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/exclude_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open Excluded Activity"
+        app:layout_constraintBottom_toTopOf="@id/method_tracking_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/composable_button"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/method_tracking_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Method Tracking Examples"
+        android:backgroundTint="#9C27B0"
+        app:layout_constraintBottom_toTopOf="@id/viewmodel_tracking_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/exclude_button"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/viewmodel_tracking_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ViewModel + Custom Serializers"
+        android:backgroundTint="#FF5722"
+        app:layout_constraintBottom_toTopOf="@id/parameter_limit_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/method_tracking_button"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/parameter_limit_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Parameter Limit Demo"
+        android:backgroundTint="#607D8B"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewmodel_tracking_button"
         tools:ignore="HardcodedText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

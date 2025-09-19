@@ -70,9 +70,11 @@ class AnalyticsManagerImpl(
     override fun logEvent(
         eventName: String,
         parameters: Map<String, Any>,
+        includeGlobalParameters: Boolean,
     ) {
         scope.launch {
-            val mergedParameters = globalParameters + parameters
+            val mergedParameters =
+                if (includeGlobalParameters) globalParameters + parameters else parameters
             providers.forEach { provider ->
                 try {
                     provider.logEvent(eventName, mergedParameters)

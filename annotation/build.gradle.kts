@@ -1,22 +1,8 @@
 
-
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
-    id("org.jlleitschuh.gradle.ktlint")
+    id("java-library-convention")
 }
 
-ktlint {
-    reporters {
-        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
-    }
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-kotlin {
-    jvmToolchain(17)
+mavenPublishing {
+    coordinates(group.toString(), "easy-analytics-annotation", version.toString())
 }

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f5f5f5">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Method Tracking Examples"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"
+        android:textColor="#333333" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="This screen demonstrates method-level analytics tracking with @Track and @Param annotations. All button actions are automatically tracked with detailed parameters."
+        android:textSize="14sp"
+        android:layout_marginBottom="24dp"
+        android:textColor="#666666" />
+
+    <!-- User Login Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="User Authentication Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#333333" />
+
+    <EditText
+        android:id="@+id/user_name_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter username (min 4 chars)"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp" />
+
+    <Button
+        android:id="@+id/login_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Perform Login (Tracked)"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/button_primary" />
+
+    <!-- Search Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Search Functionality Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#333333" />
+
+    <EditText
+        android:id="@+id/search_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter search query"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp" />
+
+    <Button
+        android:id="@+id/search_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Perform Search (Tracked)"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/button_primary" />
+
+    <!-- E-commerce Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="E-commerce Actions Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#333333" />
+
+    <Button
+        android:id="@+id/purchase_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Purchase Premium ($9.99) - Tracked"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/button_success" />
+
+    <!-- Error Handling Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Error Tracking Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#333333" />
+
+    <Button
+        android:id="@+id/error_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Trigger Error Scenario (Tracked)"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/button_warning" />
+
+    <!-- Complex Operation Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Complex Operation Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#333333" />
+
+    <Button
+        android:id="@+id/complex_operation_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Run Complex Operation (Tracked with timing)"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/button_info" />
+
+    <!-- Serializable Data Classes Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Serializable Data Classes Demo"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#333333" />
+
+    <Button
+        android:id="@+id/serializable_demo_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Demonstrate @Serializable Classes (kotlinx.serialization)"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/button_primary" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💡 Tip: Check your analytics logs to see how method calls are automatically tracked with parameters and execution timing!"
+        android:textSize="12sp"
+        android:textColor="#888888"
+        android:background="#e8f4fd"
+        android:padding="12dp"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>
+</ScrollView>

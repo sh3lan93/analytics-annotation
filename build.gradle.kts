@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
+    id("com.vanniktech.maven.publish") version "0.34.0" apply false
 }
 
 subprojects {
@@ -13,6 +14,7 @@ subprojects {
             mapOf(
                 "ktlint_function-naming" to "disabled",
                 "ktlint_standard_function-naming" to "disabled",
+                "ktlint_standard_comment-wrapping" to "disabled",
             ),
         )
         filter {

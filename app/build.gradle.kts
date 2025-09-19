@@ -2,12 +2,35 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
     id("org.jlleitschuh.gradle.ktlint")
+    id("dev.moshalan.easyanalytics") version "1.0.0" // Analytics plugin for automatic screen tracking
 }
 
 ktlint {
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
+    }
+}
+
+// Analytics plugin configuration
+analytics {
+    enabled = true
+    debugMode = true
+    trackActivities = true
+    trackFragments = true
+    trackComposables = true
+
+    // Include only our app packages for optimization
+    includePackages = setOf("com.shalan.analyticsannotation")
+    excludePackages = setOf("com.shalan.analyticsannotation.exclude")
+
+    // Method tracking configuration
+    methodTracking {
+        enabled = true
+        maxParametersPerMethod = 10
+        validateAnnotations = true
+        excludeMethods = setOf("toString", "hashCode", "equals")
     }
 }
 
@@ -19,7 +42,7 @@ android {
         applicationId = "com.shalan.analyticsannotation"
 
         targetSdk = 34
-        minSdk = 24
+        minSdk = 26
         versionCode = 1
         versionName = "1.0"
 

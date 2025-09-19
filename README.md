@@ -50,12 +50,14 @@ dependencies {
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        
-        ScreenTracking.initialize(this) {
-            debugMode = BuildConfig.DEBUG
-            providers.add(DebugAnalyticsProvider())
-            // Add your analytics providers here
-        }
+
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                debugMode = BuildConfig.DEBUG
+                providers.add(DebugAnalyticsProvider())
+                // Add your analytics providers here
+            }
+        )
     }
 }
 ```
@@ -167,15 +169,33 @@ analytics {
 
 #### Runtime Configuration
 ```kotlin
-ScreenTracking.initialize(application) {
-    debugMode = BuildConfig.DEBUG
-    
-    providers.add(DebugAnalyticsProvider())
-    providers.add(FirebaseAnalyticsProvider()) // Custom provider
-    
-    // Global parameter provider
-    globalParamsProvider = { 
-        mapOf("app_version" to BuildConfig.VERSION_NAME)
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                debugMode = BuildConfig.DEBUG
+
+                // Add analytics providers
+                providers.add(DebugAnalyticsProvider())
+                providers.add(FirebaseAnalyticsProvider()) // Custom provider
+
+                // Configure method tracking (optional)
+                methodTracking {
+                    enabled = true
+                    errorHandler = { throwable ->
+                        Log.e("Analytics", "Method tracking error", throwable)
+                    }
+                }
+            }
+        )
+
+        // Set global parameters (optional)
+        ScreenTracking.setGlobalParameters(mapOf(
+            "app_version" to BuildConfig.VERSION_NAME,
+            "build_type" to BuildConfig.BUILD_TYPE
+        ))
     }
 }
 ```

@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     id("org.jlleitschuh.gradle.ktlint")
-    id("com.shalan.easyanalytics") version "1.0.0-SNAPSHOT" // Analytics plugin for automatic screen tracking
+    id("dev.moshalan.easyanalytics") version "1.0.0" // Analytics plugin for automatic screen tracking
 }
 
 ktlint {

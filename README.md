@@ -1,7 +1,7 @@
 # Analytics Annotation Library
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation/releases)
 
 A powerful, annotation-based tracking library for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
@@ -40,7 +40,7 @@ analytics {
 
 dependencies {
     implementation("dev.moshalan.easy-analytics-core:1.0.0")
-    implementation("dev.moshalan.easy-analytics-core:1.0.0") // For Compose support
+    implementation("dev.moshalan.easy-analytics-compose:1.0.0") // For Compose support
 }
 ```
 
@@ -295,7 +295,7 @@ cd analytics-annotation
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 

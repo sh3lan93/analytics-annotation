@@ -15,7 +15,7 @@ A powerful, annotation-based tracking library for Android that eliminates boiler
 - **🚀 High Performance**: Minimal build overhead with incremental build support
 - **🔧 Highly Configurable**: Fine-grained control over tracking behavior via Gradle plugin
 - **🧪 Testing Friendly**: Built-in debug providers and test utilities
-- **📱 Modern Android**: Supports API 24+ with latest Android development practices
+- **📱 Modern Android**: Supports API 26+ with latest Android development practices
 
 ## 🚀 Quick Start
 
@@ -246,7 +246,7 @@ analytics {
 ```
 
 Sample debug output:
-```
+```text
 DEBUG: AnalyticsClassVisitor: Found @TrackScreen annotation on class com.myapp.MainActivity
 DEBUG: AnalyticsClassVisitor: Injecting Activity tracking for "Home Screen"
 DEBUG: AnalyticsClassVisitor: Generated tracking method successfully

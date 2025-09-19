@@ -44,11 +44,11 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Run ktlint check
-      run: ./gradlew ktlintCheck --no-daemon
+      run: ./gradlew ktlintCheck
 
     - name: Generate ktlint report
       if: failure()
-      run: ./gradlew ktlintFormat --no-daemon || true
+      run: ./gradlew ktlintFormat || true
 
     - name: Upload ktlint results
       if: failure()
@@ -130,7 +130,7 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Run dependency vulnerability check
-      run: ./gradlew dependencyUpdates --no-daemon || true
+      run: ./gradlew dependencyUpdates || true
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -139,7 +139,7 @@ jobs:
         queries: security-and-quality
 
     - name: Build for CodeQL analysis
-      run: ./gradlew assemble --no-daemon
+      run: ./gradlew assemble
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
@@ -197,13 +197,13 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Build all modules
-      run: ./gradlew build --no-daemon --stacktrace
+      run: ./gradlew build --stacktrace
 
     - name: Run unit tests
-      run: ./gradlew test --no-daemon --continue
+      run: ./gradlew test --continue
 
     - name: Run Android lint
-      run: ./gradlew lint --no-daemon || true
+      run: ./gradlew lint || true
 
     - name: Upload test results
       if: always()
@@ -257,13 +257,13 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Build and test plugin
-      run: ./gradlew :plugin:test --no-daemon
+      run: ./gradlew :plugin:test
 
     - name: Publish plugin locally
-      run: ./gradlew :plugin:publishToMavenLocal --no-daemon
+      run: ./gradlew :plugin:publishToMavenLocal
 
     - name: Test plugin integration with sample app
-      run: ./gradlew :app:clean :app:build --no-daemon
+      run: ./gradlew :app:clean :app:build
 
     - name: Validate plugin functionality
       run: |
@@ -336,10 +336,10 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Generate dependency report
-      run: ./gradlew dependencies --no-daemon > dependency-report.txt
+      run: ./gradlew dependencies > dependency-report.txt
 
     - name: Check for vulnerable dependencies
-      run: ./gradlew dependencyUpdates --no-daemon
+      run: ./gradlew dependencyUpdates
 
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4

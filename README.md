@@ -1,7 +1,7 @@
 # Analytics Annotation Library
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.md)
 [![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation/releases)
 
 A powerful, annotation-based tracking library for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
@@ -322,7 +322,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](https:
 - [Sample App](app/) - Complete example implementation
 - [Examples](https://github.com/sh3lan93/analytics-annotation/blob/main/EXAMPLES.md) - Comprehensive usage examples
 - [Plugin Documentation](https://github.com/sh3lan93/analytics-annotation/blob/main/plugin/README.md) - Detailed plugin documentation
-- [Issues](https://github.com/shalan/analytics-annotation/issues) - Report bugs and request features
+- [Issues](https://github.com/sh3lan93/analytics-annotation/issues) - Report bugs and request features
 
 ## 📞 Support
 

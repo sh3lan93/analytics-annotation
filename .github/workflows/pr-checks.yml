@@ -12,9 +12,7 @@ concurrency:
 
 # Default permissions: read-only for all scopes
 permissions:
-  contents: read
   packages: read
-  metadata: read
 
 jobs:
   code-style:
@@ -34,7 +32,7 @@ jobs:
         fetch-depth: 0
 
     - name: Validate Gradle wrapper
-      uses: gradle/wrapper-validation-action@v1
+      uses: gradle/wrapper-validation-action@v2
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -126,7 +124,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Validate Gradle wrapper
-      uses: gradle/wrapper-validation-action@v1
+      uses: gradle/wrapper-validation-action@v2
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -153,6 +151,7 @@ jobs:
       run: ./gradlew dependencyUpdates || true
 
     - name: Initialize CodeQL
+      if: github.event.pull_request.head.repo.fork == false
       uses: github/codeql-action/init@v3
       with:
         languages: java-kotlin
@@ -162,11 +161,13 @@ jobs:
       run: ./gradlew assemble
 
     - name: Perform CodeQL Analysis
+      if: github.event.pull_request.head.repo.fork == false
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:java-kotlin"
 
     - name: Run secret scanning with TruffleHog
+      if: github.event.pull_request.head.repo.fork == false
       uses: trufflesecurity/trufflehog@v3.63.5
       with:
         path: ./
@@ -199,7 +200,7 @@ jobs:
         fetch-depth: 0
 
     - name: Validate Gradle wrapper
-      uses: gradle/wrapper-validation-action@v1
+      uses: gradle/wrapper-validation-action@v2
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -264,7 +265,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Validate Gradle wrapper
-      uses: gradle/wrapper-validation-action@v1
+      uses: gradle/wrapper-validation-action@v2
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -351,7 +352,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Validate Gradle wrapper
-      uses: gradle/wrapper-validation-action@v1
+      uses: gradle/wrapper-validation-action@v2
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4

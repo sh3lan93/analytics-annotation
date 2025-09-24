@@ -315,20 +315,20 @@ cd analytics-annotation
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](https://github.com/sh3lan93/analytics-annotation/blob/main/LICENSE.md) file for details.
 
 ## 🔗 Links
 
 - [Sample App](app/) - Complete example implementation
-- [Examples](EXAMPLES.md) - Comprehensive usage examples
-- [Plugin Documentation](plugin/README.md) - Detailed plugin documentation
+- [Examples](https://github.com/sh3lan93/analytics-annotation/blob/main/EXAMPLES.md) - Comprehensive usage examples
+- [Plugin Documentation](https://github.com/sh3lan93/analytics-annotation/blob/main/plugin/README.md) - Detailed plugin documentation
 - [Issues](https://github.com/shalan/analytics-annotation/issues) - Report bugs and request features
 
 ## 📞 Support
 
-- **Examples**: See [EXAMPLES.md](EXAMPLES.md) for comprehensive usage examples
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/shalan/analytics-annotation/issues)
-- **Plugin Details**: Check [plugin/README.md](plugin/README.md) for detailed plugin documentation
+- **Examples**: See [EXAMPLES.md](https://github.com/sh3lan93/analytics-annotation/blob/main/EXAMPLES.md) for comprehensive usage examples
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/sh3lan93/analytics-annotation/issues)
+- **Plugin Details**: Check [plugin/README.md](https://github.com/sh3lan93/analytics-annotation/blob/main/plugin/README.md) for detailed plugin documentation
 
 ---
 

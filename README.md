@@ -1,10 +1,10 @@
-# Analytics Annotation Library
+# Easy-Annotation Android Gradle Plugin
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.md)
 [![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation/releases)
 
-A powerful, annotation-based tracking library for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
+A powerful, annotation-based tracking Gradle plugin for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
 
 ## ✨ Features
 
@@ -136,7 +136,7 @@ The plugin automatically injects tracking code at compile time using bytecode tr
 - **Method Tracking**: Calls injected at the beginning of `@Track` annotated methods
 
 #### Compile-Time Transformation
-The library uses a Gradle plugin approach that:
+The Gradle plugin approach is that:
 
 - Scans for `@TrackScreen`, `@TrackScreenComposable`, and `@Trackable` annotations during build
 - Generates bytecode to inject analytics tracking calls  
@@ -222,14 +222,6 @@ class FirebaseAnalyticsProvider(
             }
         }
         firebaseAnalytics.logEvent(eventName, bundle)
-    }
-    
-    override fun setUserId(userId: String?) {
-        firebaseAnalytics.setUserId(userId)
-    }
-    
-    override fun setUserProperty(key: String, value: String) {
-        firebaseAnalytics.setUserProperty(key, value)
     }
 }
 ```

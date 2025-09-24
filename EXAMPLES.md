@@ -466,5 +466,3 @@ class BatchingAnalyticsProvider(
 ```
 
 ---
-
-For more examples and detailed documentation, see our [main README](README.md) and [API documentation](API.md).

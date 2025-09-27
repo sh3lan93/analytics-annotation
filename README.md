@@ -32,15 +32,15 @@ plugins {
 // Configure the analytics plugin
 analytics {
     enabled = true
-    debugMode = BuildConfig.DEBUG
+    debugMode = false //true if you are interested in see the debug messages while doing manipulation 
     trackActivities = true
     trackFragments = true 
     trackComposables = true
 }
 
 dependencies {
-    implementation("dev.moshalan.easy-analytics-core:1.0.0")
-    implementation("dev.moshalan.easy-analytics-compose:1.0.0") // For Compose support
+    implementation("dev.moshalan:easy-analytics-core:1.0.0")
+    implementation("dev.moshalan:easy-analytics-compose:1.0.0") // For Compose support
 }
 ```
 

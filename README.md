@@ -44,7 +44,30 @@ dependencies {
 }
 ```
 
-### 2. Initialize in Your Application
+### 2. Define the Analytics Provider
+```kotlin
+class FirebaseAnalyticsProvider(
+    private val firebaseAnalytics: FirebaseAnalytics
+) : AnalyticsProvider {
+    
+    override fun logEvent(eventName: String, parameters: Map<String, Any>) {
+        val bundle = Bundle().apply {
+            parameters.forEach { (key, value) ->
+                when (value) {
+                    is String -> putString(key, value)
+                    is Int -> putInt(key, value)
+                    is Double -> putDouble(key, value)
+                    is Boolean -> putBoolean(key, value)
+                    else -> putString(key, value.toString())
+                }
+            }
+        }
+        firebaseAnalytics.logEvent(eventName, bundle)
+    }
+}
+```
+
+### 3. Initialize in Your Application
 
 ```kotlin
 class MyApplication : Application() {
@@ -62,7 +85,7 @@ class MyApplication : Application() {
 }
 ```
 
-### 3. Annotate Your Screens
+### 4. Annotate Your Screens
 
 #### Activities
 ```kotlin
@@ -196,32 +219,6 @@ class MyApplication : Application() {
             "app_version" to BuildConfig.VERSION_NAME,
             "build_type" to BuildConfig.BUILD_TYPE
         ))
-    }
-}
-```
-
-### Custom Analytics Providers
-
-Integrate with any analytics service:
-
-```kotlin
-class FirebaseAnalyticsProvider(
-    private val firebaseAnalytics: FirebaseAnalytics
-) : AnalyticsProvider {
-    
-    override fun logEvent(eventName: String, parameters: Map<String, Any>) {
-        val bundle = Bundle().apply {
-            parameters.forEach { (key, value) ->
-                when (value) {
-                    is String -> putString(key, value)
-                    is Int -> putInt(key, value)
-                    is Double -> putDouble(key, value)
-                    is Boolean -> putBoolean(key, value)
-                    else -> putString(key, value.toString())
-                }
-            }
-        }
-        firebaseAnalytics.logEvent(eventName, bundle)
     }
 }
 ```

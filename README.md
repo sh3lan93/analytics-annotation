@@ -21,6 +21,8 @@ A powerful, annotation-based tracking Gradle plugin for Android that eliminates 
 
 ### 1. Apply the Plugin
 
+**For single module projects:**
+
 ```kotlin
 // app/build.gradle.kts
 plugins {
@@ -32,9 +34,9 @@ plugins {
 // Configure the analytics plugin
 analytics {
     enabled = true
-    debugMode = false //true if you are interested in see the debug messages while doing manipulation 
+    debugMode = false //true if you are interested in see the debug messages while doing manipulation
     trackActivities = true
-    trackFragments = true 
+    trackFragments = true
     trackComposables = true
 }
 
@@ -43,6 +45,49 @@ dependencies {
     implementation("dev.moshalan:easy-analytics-compose:1.0.0") // For Compose support
 }
 ```
+
+**For multi-module projects:**
+
+Apply the plugin only to your app module. Feature/library modules just need the dependencies:
+
+```kotlin
+// app/build.gradle.kts
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("dev.moshalan.easyanalytics") version "1.0.0"  // Apply plugin here
+}
+
+analytics {
+    enabled = true
+    debugMode = false
+    trackActivities = true
+    trackFragments = true
+    trackComposables = true
+}
+
+dependencies {
+    implementation(project(":feature:home"))  // Your feature modules
+    implementation("dev.moshalan:easy-analytics-core:1.0.0")
+    implementation("dev.moshalan:easy-analytics-compose:1.0.0")
+}
+```
+
+```kotlin
+// feature/home/build.gradle.kts (Library Module)
+plugins {
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
+    // Don't apply the analytics plugin in library modules
+}
+
+dependencies {
+    implementation("dev.moshalan:easy-analytics-core:1.0.0")
+    implementation("dev.moshalan:easy-analytics-annotation:1.0.0")
+}
+```
+
+The plugin will automatically instrument all `@TrackScreen` annotations in your feature modules when building the app.
 
 ### 2. Define the Analytics Provider
 ```kotlin

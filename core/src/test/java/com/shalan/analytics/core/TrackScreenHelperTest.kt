@@ -228,8 +228,7 @@ class TrackScreenHelperTest {
         var parameterValue = "initial"
         val instance =
             object : TrackedScreenParamsProvider {
-                override fun getTrackedScreenParams(): Map<String, Any> =
-                    mapOf("dynamicValue" to parameterValue)
+                override fun getTrackedScreenParams(): Map<String, Any> = mapOf("dynamicValue" to parameterValue)
             }
 
         TrackScreenHelper.trackScreen(instance, "DynamicScreen", "DynamicClass")

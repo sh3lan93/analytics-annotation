@@ -15,6 +15,7 @@ import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 
 abstract class AnalyticsClassVisitorFactory :
     AsmClassVisitorFactory<AnalyticsClassVisitorFactory.Parameters> {
@@ -286,7 +287,7 @@ abstract class AnalyticsClassVisitorFactory :
                     PluginLogger.forceDebug("FORCE_DEBUG: Taking composable path for method: $name")
                     PluginLogger.forceDebug("Creating ComposableMethodVisitor for $name")
                     logDebug("AnalyticsClassVisitor: Wrapping Composable $name method for potential instrumentation")
-                    return ComposableMethodVisitor(api, methodVisitor, name ?: "unknown")
+                    return ComposableMethodVisitor(api, methodVisitor, name ?: "unknown", descriptor ?: "")
                 }
 
                 PluginLogger.forceDebug("FORCE_DEBUG: Taking TrackMethodVisitor path for method: $name")
@@ -395,8 +396,8 @@ abstract class AnalyticsClassVisitorFactory :
                 }
 
                 TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE -> {
-                    // For Composables, inject the tracking method
-                    injectTrackingMethod(annotationInfo)
+                    // For Composables, no need to inject __injectAnalyticsTracking method
+                    // The TrackScreenOnce composable is called directly in ComposableMethodVisitor.visitCode()
                     logDebug("AnalyticsClassVisitor: Composable tracking injection completed for ${annotationInfo.screenName}")
                 }
             }
@@ -477,6 +478,7 @@ abstract class AnalyticsClassVisitorFactory :
             api: Int,
             private val delegate: MethodVisitor,
             private val methodName: String,
+            private val methodDescriptor: String,
         ) : MethodVisitor(api, delegate) {
             private var methodHasTrackScreenComposableAnnotation = false
             private var methodHasComposableAnnotation = false
@@ -531,19 +533,67 @@ abstract class AnalyticsClassVisitorFactory :
                 ) {
                     hasInjectedTracking = true
                     logDebug(
-                        "AnalyticsClassVisitor: Injecting tracking call at start of Composable $methodName " +
+                        "AnalyticsClassVisitor: Injecting TrackScreenOnce call at start of Composable $methodName " +
                             "with screenName: $methodScreenName",
                     )
 
-                    // Call the injected __injectAnalyticsTracking method (static for composables)
+                    // Instead of calling __injectAnalyticsTracking, call the TrackScreenOnce composable
+                    // This ensures the tracking is wrapped in a LaunchedEffect to prevent duplicate events on recomposition
+
+                    // Push screenName parameter
+                    delegate.visitLdcInsn(methodScreenName)
+
+                    // Push screenClass parameter (use method name or extracted class name)
+                    val screenClass = extractSimpleClassName(className)
+                    delegate.visitLdcInsn(screenClass)
+
+                    // Push empty map for parameters
                     delegate.visitMethodInsn(
                         Opcodes.INVOKESTATIC,
-                        internalClassName,
-                        "__injectAnalyticsTracking",
-                        "()V",
+                        "java/util/Collections",
+                        "emptyMap",
+                        "()Ljava/util/Map;",
+                        false,
+                    )
+
+                    // Call TrackScreenOnce(screenName, screenClass, parameters, $composer, $changed)
+                    // Note: Composable functions have additional Composer and changed parameters
+                    // We need to pass through the Composer parameter from the current method
+                    delegate.visitVarInsn(Opcodes.ALOAD, getComposerParameterIndex())
+                    delegate.visitInsn(Opcodes.ICONST_0) // $changed parameter = 0
+
+                    delegate.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        "com/shalan/analytics/compose/TrackScreenOnceKt",
+                        "TrackScreenOnce",
+                        "(Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Landroidx/compose/runtime/Composer;I)V",
                         false,
                     )
                 }
+            }
+
+            private fun getComposerParameterIndex(): Int {
+                // The Composer parameter is typically near the end of the parameter list
+                // We need to calculate the local variable index based on method descriptor
+                val paramTypes = Type.getArgumentTypes(methodDescriptor)
+                var localVarIndex = 0
+
+                // Composable functions are typically static (top-level functions)
+                // If this were an instance method, slot 0 would be 'this'
+                // For now we assume static methods for top-level composables
+
+                // Find the Composer parameter by scanning through the parameters
+                paramTypes.forEach { type ->
+                    if (type.descriptor.contains("Landroidx/compose/runtime/Composer;")) {
+                        return localVarIndex
+                    }
+                    localVarIndex += type.size // Type.size() returns 2 for long/double, 1 for others
+                }
+
+                // Fallback: if we didn't find the Composer, return the current index
+                // This should not happen for valid composable functions
+                logDebug("WARNING: Could not find Composer parameter in method $methodName")
+                return localVarIndex
             }
 
             private inner class ComposableAnnotationVisitor(

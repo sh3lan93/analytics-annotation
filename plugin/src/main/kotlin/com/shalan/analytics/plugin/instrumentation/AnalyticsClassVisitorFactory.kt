@@ -156,16 +156,12 @@ abstract class AnalyticsClassVisitorFactory :
         private var hasTrackScreenComposableAnnotation = false
         private var hasTrackableAnnotation = false
         private var screenName: String? = null
-        private var screenClass: String? = null
-        private val annotationParameters: MutableMap<String, Any> = mutableMapOf()
+        private var screenClass: String? = null // Used in TrackScreenAnnotationVisitor and createAnnotationInfo
+        private val annotationParameters: MutableMap<String, Any> = mutableMapOf() // Used in annotation visitors
         private var internalClassName: String = ""
-        private var superClassName: String? = null
         private var isActivity: Boolean = false
         private var isFragment: Boolean = false
         private val methodsToInstrument = mutableListOf<String>()
-        private var hasOnCreateMethod = false
-        private var onCreateMethodAccess = 0
-        private var implementsTrackedScreenParamsProvider: Boolean = false
 
         override fun visit(
             version: Int,
@@ -183,10 +179,6 @@ abstract class AnalyticsClassVisitorFactory :
                 val dotClassName = it.replace('/', '.')
                 logDebug("AnalyticsClassVisitor: Processing class $dotClassName")
             }
-            superClassName = superName
-
-            // Check if the class implements TrackedScreenParamsProvider
-            implementsTrackedScreenParamsProvider = interfaces?.contains("com/shalan/analytics/core/TrackedScreenParamsProvider") == true
 
             // Determine class type for proper transformation
             isActivity = isActivityClass(superName)
@@ -198,7 +190,6 @@ abstract class AnalyticsClassVisitorFactory :
                     "AnalyticsClassVisitor: Class $dotClassName - isActivity: $isActivity, isFragment: $isFragment, superName: $superName",
                 )
                 logDebug("AnalyticsClassVisitor: Raw superName: '$superName'")
-                logDebug("AnalyticsClassVisitor: Implements TrackedScreenParamsProvider: $implementsTrackedScreenParamsProvider")
             }
         }
 
@@ -249,12 +240,6 @@ abstract class AnalyticsClassVisitorFactory :
                 if (shouldCollectMethod(name, descriptor)) {
                     methodsToInstrument.add(name ?: "")
                     logDebug("AnalyticsClassVisitor: Collected method $name for potential instrumentation")
-
-                    // Store onCreate method info for later modification
-                    if (name == "onCreate" && descriptor == "(Landroid/os/Bundle;)V") {
-                        hasOnCreateMethod = true
-                        onCreateMethodAccess = access
-                    }
                 }
 
                 val methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions)

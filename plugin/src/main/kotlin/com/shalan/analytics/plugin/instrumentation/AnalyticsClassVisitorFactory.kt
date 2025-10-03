@@ -618,18 +618,11 @@ abstract class AnalyticsClassVisitorFactory :
         }
 
         private fun injectTrackingMethod(annotationInfo: TrackingAnnotationInfo) {
-            // Inject a method that performs the tracking call
-            // Make it static for Composables, private for Activities/Fragments
-            val methodAccess =
-                if (annotationInfo.annotationType == TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE) {
-                    Opcodes.ACC_PRIVATE + Opcodes.ACC_STATIC
-                } else {
-                    Opcodes.ACC_PRIVATE
-                }
-
+            // Inject a simple method that calls TrackScreenHelper.trackScreen()
+            // This replaces complex ASM bytecode with a simple static method call
             val methodVisitor =
                 cv.visitMethod(
-                    methodAccess,
+                    Opcodes.ACC_PRIVATE,
                     "__injectAnalyticsTracking",
                     "()V",
                     null,
@@ -638,14 +631,12 @@ abstract class AnalyticsClassVisitorFactory :
 
             methodVisitor.visitCode()
 
-            // Generate: ScreenTracking.getManager().logScreenView(screenName, screenClass, parameters)
-            methodVisitor.visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                "com/shalan/analytics/core/ScreenTracking",
-                "getManager",
-                "()Lcom/shalan/analytics/core/AnalyticsManager;",
-                false,
-            )
+            // Generate: TrackScreenHelper.trackScreen(this, screenName, screenClass)
+            // This is much simpler than the previous approach which generated complex bytecode
+            // for parameter collection and ScreenTracking calls
+
+            // Load 'this' as first parameter (the Activity/Fragment instance)
+            methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
 
             // Push screenName parameter
             methodVisitor.visitLdcInsn(annotationInfo.screenName)
@@ -653,56 +644,20 @@ abstract class AnalyticsClassVisitorFactory :
             // Push screenClass parameter
             methodVisitor.visitLdcInsn(annotationInfo.screenClass ?: annotationInfo.className)
 
-            // Create and push parameters Map
-            generateParametersMap(methodVisitor)
-
+            // Call TrackScreenHelper.trackScreen(Object, String, String)
             methodVisitor.visitMethodInsn(
-                Opcodes.INVOKEINTERFACE,
-                "com/shalan/analytics/core/AnalyticsManager",
-                "logScreenView",
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V",
-                true,
+                Opcodes.INVOKESTATIC,
+                "com/shalan/analytics/core/TrackScreenHelper",
+                "trackScreen",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)V",
+                false,
             )
 
             methodVisitor.visitInsn(Opcodes.RETURN)
-            methodVisitor.visitMaxs(6, 1) // Increased stack for array operations
+            methodVisitor.visitMaxs(3, 1) // Reduced stack size - much simpler now
             methodVisitor.visitEnd()
 
             logDebug("AnalyticsClassVisitor: Successfully injected tracking method")
-        }
-
-        private fun generateParametersMap(methodVisitor: MethodVisitor) {
-            if (implementsTrackedScreenParamsProvider &&
-                (
-                    annotationInfo?.annotationType == TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN ||
-                        annotationInfo?.annotationType == TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE
-                )
-            ) {
-                // For classes that implement TrackedScreenParamsProvider, directly call the interface method
-                // Load 'this' for the interface method call
-                methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
-
-                // Cast this to TrackedScreenParamsProvider
-                methodVisitor.visitTypeInsn(Opcodes.CHECKCAST, "com/shalan/analytics/core/TrackedScreenParamsProvider")
-
-                // Call getTrackedScreenParams() method
-                methodVisitor.visitMethodInsn(
-                    Opcodes.INVOKEINTERFACE,
-                    "com/shalan/analytics/core/TrackedScreenParamsProvider",
-                    "getTrackedScreenParams",
-                    "()Ljava/util/Map;",
-                    true,
-                )
-            } else {
-                // Create empty map: Collections.emptyMap()
-                methodVisitor.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
-                    "java/util/Collections",
-                    "emptyMap",
-                    "()Ljava/util/Map;",
-                    false,
-                )
-            }
         }
 
         private fun shouldCollectMethod(

@@ -155,7 +155,6 @@ abstract class AnalyticsClassVisitorFactory :
         private var hasTrackScreenAnnotation = false
         private var hasTrackScreenComposableAnnotation = false
         private var hasTrackableAnnotation = false
-        private val methodsWithTrackAnnotation = mutableMapOf<String, MethodTrackInfo>()
         private var screenName: String? = null
         private var screenClass: String? = null
         private val annotationParameters: MutableMap<String, Any> = mutableMapOf()

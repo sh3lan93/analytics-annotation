@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "dev.moshalan"
-version = "1.0.0"
+version = "1.0.1"
 
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

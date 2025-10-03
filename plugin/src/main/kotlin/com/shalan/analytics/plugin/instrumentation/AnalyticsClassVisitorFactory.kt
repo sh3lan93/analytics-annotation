@@ -17,62 +17,117 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 
+/**
+ * AGP instrumentation factory that creates ASM class visitors for automatic screen tracking.
+ *
+ * This factory is the entry point for the Analytics Annotation Plugin's bytecode transformation.
+ * It creates [AnalyticsClassVisitor] instances that scan for @TrackScreen, @TrackScreenComposable,
+ * and @Trackable annotations, then injects tracking code at appropriate lifecycle points.
+ *
+ * ## Transformation Strategy
+ *
+ * The plugin uses deferred transformation:
+ * 1. First pass: Scan class for annotations and collect metadata
+ * 2. Second pass: Inject tracking code based on collected metadata
+ *
+ * This approach allows the plugin to make informed decisions about what bytecode to generate
+ * based on the complete class structure.
+ *
+ * ## Supported Annotations
+ *
+ * - **@TrackScreen**: For Activities and Fragments - injects tracking in onCreate/onViewCreated
+ * - **@TrackScreenComposable**: For Composable functions - wraps tracking in LaunchedEffect
+ * - **@Trackable**: For classes with @Track method annotations - enables method-level tracking
+ *
+ * @see AnalyticsClassVisitor
+ * @see com.shalan.analytics.annotation.TrackScreen
+ * @see com.shalan.analytics.compose.TrackScreenComposable
+ */
 abstract class AnalyticsClassVisitorFactory :
     AsmClassVisitorFactory<AnalyticsClassVisitorFactory.Parameters> {
+    /**
+     * Configuration parameters for the Analytics Annotation Plugin.
+     *
+     * These parameters are configured via the Gradle plugin extension and control
+     * which classes and methods get instrumented during the build.
+     */
     interface Parameters : InstrumentationParameters {
+        /** Whether the plugin is enabled. When false, no instrumentation occurs. */
         @get:Input
         val enabled: Property<Boolean>
 
+        /** Whether to enable debug logging during bytecode transformation. */
         @get:Input
         @get:Optional
         val debugMode: Property<Boolean>
 
+        /** Whether to track Activities with @TrackScreen annotation. */
         @get:Input
         @get:Optional
         val trackActivities: Property<Boolean>
 
+        /** Whether to track Fragments with @TrackScreen annotation. */
         @get:Input
         @get:Optional
         val trackFragments: Property<Boolean>
 
+        /** Whether to track Composable functions with @TrackScreenComposable annotation. */
         @get:Input
         @get:Optional
         val trackComposables: Property<Boolean>
 
+        /** List of package prefixes to include for instrumentation (e.g., ["com.myapp."]). */
         @get:Input
         @get:Optional
         val includePackages: ListProperty<String>
 
+        /** List of package prefixes to exclude from instrumentation (e.g., ["com.myapp.test."]). */
         @get:Input
         @get:Optional
         val excludePackages: ListProperty<String>
 
-        // Method tracking configuration parameters
+        /** Whether to enable method-level tracking with @Track annotation. */
         @get:Input
         @get:Optional
         val methodTrackingEnabled: Property<Boolean>
 
+        /** Maximum number of parameters to capture per @Track method (default: 10). */
         @get:Input
         @get:Optional
         val maxParametersPerMethod: Property<Int>
 
+        /** Whether to validate annotation usage at build time. */
         @get:Input
         @get:Optional
         val validateAnnotations: Property<Boolean>
 
+        /** List of method names to exclude from @Track instrumentation. */
         @get:Input
         @get:Optional
         val excludeMethods: ListProperty<String>
 
+        /** List of regex patterns for class names to include for instrumentation. */
         @get:Input
         @get:Optional
         val includeClassPatterns: ListProperty<String>
 
+        /** List of regex patterns for class names to exclude from instrumentation. */
         @get:Input
         @get:Optional
         val excludeClassPatterns: ListProperty<String>
     }
 
+    /**
+     * Creates an ASM ClassVisitor for transforming a single class file.
+     *
+     * This method is called by AGP for each class that passes the [isInstrumentable] check.
+     * It creates an [AnalyticsClassVisitor] that will scan for tracking annotations and
+     * inject appropriate bytecode.
+     *
+     * @param classContext Context information about the class being transformed
+     * @param nextClassVisitor The next visitor in the transformation chain
+     * @return An [AnalyticsClassVisitor] if the plugin is enabled, otherwise the original visitor
+     */
     override fun createClassVisitor(
         classContext: ClassContext,
         nextClassVisitor: ClassVisitor,
@@ -95,6 +150,24 @@ abstract class AnalyticsClassVisitorFactory :
         )
     }
 
+    /**
+     * Determines whether a class should be instrumented by this plugin.
+     *
+     * This method performs early filtering to skip classes that definitely don't need
+     * instrumentation, improving build performance by reducing unnecessary class visits.
+     *
+     * ## Filtering Logic
+     *
+     * Classes are excluded if they:
+     * - Are part of the Android SDK (android.*, androidx.*)
+     * - Are part of the JDK (java.*)
+     * - Are part of Kotlin stdlib (kotlin.*)
+     * - Don't match includePackages patterns (if specified)
+     * - Match excludePackages patterns
+     *
+     * @param classData Metadata about the class being considered for instrumentation
+     * @return true if the class should be visited for potential transformation
+     */
     override fun isInstrumentable(classData: ClassData): Boolean {
         val params = parameters.get()
 
@@ -144,6 +217,24 @@ abstract class AnalyticsClassVisitorFactory :
         return true
     }
 
+    /**
+     * ASM ClassVisitor that performs the actual bytecode transformation for analytics tracking.
+     *
+     * This visitor implements a two-pass strategy:
+     *
+     * **Pass 1 (Scanning):**
+     * - Visits class and method annotations to detect @TrackScreen, @TrackScreenComposable, @Trackable
+     * - Collects metadata about screen names, class types (Activity/Fragment/Composable)
+     * - Identifies lifecycle methods that need instrumentation
+     *
+     * **Pass 2 (Transformation):**
+     * - In [visitEnd], generates helper methods and injects tracking calls
+     * - For Activities/Fragments: Injects `__injectAnalyticsTracking()` method and calls it after super lifecycle calls
+     * - For Composables: Injects `TrackScreenOnce()` call at function start
+     *
+     * @property parameters Plugin configuration parameters
+     * @property className The fully qualified name of the class being visited
+     */
     private inner class AnalyticsClassVisitor(
         api: Int,
         nextClassVisitor: ClassVisitor,
@@ -163,6 +254,13 @@ abstract class AnalyticsClassVisitorFactory :
         private var isFragment: Boolean = false
         private val methodsToInstrument = mutableListOf<String>()
 
+        /**
+         * Visits the class header to determine class type (Activity/Fragment/other).
+         *
+         * This is called first when processing a class file. It examines the superclass
+         * to determine if this is an Activity or Fragment, which affects how tracking
+         * will be injected.
+         */
         override fun visit(
             version: Int,
             access: Int,
@@ -193,6 +291,14 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Visits class-level annotations to detect @TrackScreen, @TrackScreenComposable, or @Trackable.
+         *
+         * When a tracking annotation is found, returns a specialized AnnotationVisitor that extracts
+         * the annotation parameters (screenName, screenClass, etc.) for later use during transformation.
+         *
+         * @return A specialized AnnotationVisitor for tracking annotations, or the default visitor otherwise
+         */
         override fun visitAnnotation(
             descriptor: String?,
             visible: Boolean,
@@ -224,6 +330,16 @@ abstract class AnalyticsClassVisitorFactory :
             return super.visitAnnotation(descriptor, visible)
         }
 
+        /**
+         * Visits each method to determine if it needs instrumentation.
+         *
+         * This method creates specialized MethodVisitors for different method types:
+         * - **Lifecycle methods** (onCreate/onViewCreated): Wrapped in [LifecycleInstrumentingMethodVisitor]
+         * - **Composable methods**: Wrapped in [ComposableMethodVisitor]
+         * - **Other methods**: Wrapped in TrackMethodVisitor for @Track annotation support
+         *
+         * @return A specialized MethodVisitor that may inject tracking code
+         */
         override fun visitMethod(
             access: Int,
             name: String?,
@@ -304,6 +420,16 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Called when class visiting is complete - performs deferred bytecode transformation.
+         *
+         * This is where the "second pass" happens. After collecting all annotation metadata
+         * during the class scan, this method generates and injects the necessary tracking code:
+         *
+         * - For @TrackScreen: Generates `__injectAnalyticsTracking()` method
+         * - For @TrackScreenComposable: Ensures `TrackScreenOnce()` was called in method body
+         * - For @Trackable: No class-level transformation needed (handled at method level)
+         */
         override fun visitEnd() {
             try {
                 // Check if we found any tracking annotations OR @Trackable annotation for method-level tracking
@@ -344,6 +470,14 @@ abstract class AnalyticsClassVisitorFactory :
             super.visitEnd()
         }
 
+        /**
+         * Creates a [TrackingAnnotationInfo] object from collected annotation metadata.
+         *
+         * This method is called during [visitEnd] to package all the annotation parameters
+         * collected during the scanning phase into a data object for use during transformation.
+         *
+         * @return TrackingAnnotationInfo if a tracking annotation was found, null otherwise
+         */
         private fun createAnnotationInfo(): TrackingAnnotationInfo? {
             return when {
                 hasTrackScreenAnnotation ->
@@ -366,6 +500,14 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Executes the deferred bytecode transformation based on annotation type.
+         *
+         * Called from [visitEnd] after all class scanning is complete. Decides what
+         * bytecode to generate based on the annotation type.
+         *
+         * @param annotationInfo Metadata about the tracking annotation found on this class
+         */
         private fun performDeferredTransformation(annotationInfo: TrackingAnnotationInfo) {
             logDebug("AnalyticsClassVisitor: Performing deferred transformation for ${annotationInfo.annotationType}")
 
@@ -393,6 +535,16 @@ abstract class AnalyticsClassVisitorFactory :
             injectTrackingMethod(annotationInfo)
         }
 
+        /**
+         * MethodVisitor that injects tracking calls after super.onCreate() or super.onViewCreated().
+         *
+         * This visitor monitors method instructions to detect super calls to lifecycle methods.
+         * When it finds `super.onCreate()` or `super.onViewCreated()`, it injects a call to
+         * the `__injectAnalyticsTracking()` method immediately after the super call.
+         *
+         * This ensures tracking happens at the right point in the lifecycle - after the
+         * super implementation has run but before any user code executes.
+         */
         private inner class LifecycleInstrumentingMethodVisitor(
             api: Int,
             private val delegate: MethodVisitor,
@@ -458,6 +610,15 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * MethodVisitor that injects TrackScreenOnce() calls at the start of Composable functions.
+         *
+         * This visitor scans Composable methods for @TrackScreenComposable annotations and injects
+         * a call to `TrackScreenOnce()` at the beginning of the function body. TrackScreenOnce wraps
+         * the tracking call in a LaunchedEffect(Unit) to prevent duplicate events on recomposition.
+         *
+         * The visitor also validates that @TrackScreenComposable is only used on @Composable functions.
+         */
         private inner class ComposableMethodVisitor(
             api: Int,
             private val delegate: MethodVisitor,
@@ -601,6 +762,17 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * Generates the `__injectAnalyticsTracking()` helper method for Activities/Fragments.
+         *
+         * This method generates bytecode that creates a private method which calls
+         * `TrackScreenHelper.trackScreen(this, screenName, screenClass)`. This approach
+         * is much simpler than generating complex inline bytecode for parameter collection.
+         *
+         * The generated method is called from onCreate() or onViewCreated() after the super call.
+         *
+         * @param annotationInfo Metadata about the screen to track
+         */
         private fun injectTrackingMethod(annotationInfo: TrackingAnnotationInfo) {
             // Inject a simple method that calls TrackScreenHelper.trackScreen()
             // This replaces complex ASM bytecode with a simple static method call
@@ -644,6 +816,16 @@ abstract class AnalyticsClassVisitorFactory :
             logDebug("AnalyticsClassVisitor: Successfully injected tracking method")
         }
 
+        /**
+         * Determines if a method should be collected for potential instrumentation.
+         *
+         * This is called during the first pass (method scanning) to identify methods
+         * that may need bytecode injection. Collected methods are stored in [methodsToInstrument].
+         *
+         * @param methodName The name of the method being visited
+         * @param descriptor The JVM method descriptor (parameter and return types)
+         * @return true if this method should be collected for instrumentation
+         */
         private fun shouldCollectMethod(
             methodName: String?,
             descriptor: String?,
@@ -728,10 +910,22 @@ abstract class AnalyticsClassVisitorFactory :
                 .removeSuffix("Screen")
         }
 
+        /**
+         * Extracts the simple class name from a fully qualified class name.
+         *
+         * @param className The fully qualified class name (e.g., "com.example.MainActivity")
+         * @return The simple class name (e.g., "MainActivity")
+         */
         private fun extractSimpleClassName(className: String): String {
             return className.substringAfterLast('.')
         }
 
+        /**
+         * AnnotationVisitor that extracts parameters from @TrackScreen annotations.
+         *
+         * Captures the screenName and screenClass parameters from @TrackScreen annotations
+         * and stores them in the outer class's state for use during bytecode generation.
+         */
         private inner class TrackScreenAnnotationVisitor(
             private val delegate: AnnotationVisitor?,
         ) : AnnotationVisitor(api, delegate) {
@@ -755,6 +949,12 @@ abstract class AnalyticsClassVisitorFactory :
             }
         }
 
+        /**
+         * AnnotationVisitor that extracts parameters from @TrackScreenComposable annotations.
+         *
+         * Captures the screenName parameter from @TrackScreenComposable annotations on classes
+         * and stores it in the outer class's state for use during bytecode generation.
+         */
         private inner class TrackScreenComposableAnnotationVisitor(
             private val delegate: AnnotationVisitor?,
         ) : AnnotationVisitor(api, delegate) {

@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Analytics Annotation"
-include(":app", ":annotation", ":core", ":compose", ":plugin")
+include(":app", ":annotation", ":core", ":plugin")

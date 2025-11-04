@@ -42,7 +42,6 @@ class AnalyticsPluginTest {
         assertTrue(extension.enabled)
         assertTrue(extension.trackActivities)
         assertTrue(extension.trackFragments)
-        assertTrue(extension.trackComposables)
     }
 
     @Test
@@ -84,7 +83,6 @@ class AnalyticsPluginTest {
         extension.debugMode = true
         extension.trackActivities = false
         extension.trackFragments = false
-        extension.trackComposables = false
         extension.includePackages = setOf("com.test.include")
         extension.excludePackages = setOf("com.test.exclude")
 
@@ -93,7 +91,6 @@ class AnalyticsPluginTest {
         assertTrue(extension.debugMode)
         assertFalse(extension.trackActivities)
         assertFalse(extension.trackFragments)
-        assertFalse(extension.trackComposables)
         assertEquals(setOf("com.test.include"), extension.includePackages)
         assertEquals(setOf("com.test.exclude"), extension.excludePackages)
     }

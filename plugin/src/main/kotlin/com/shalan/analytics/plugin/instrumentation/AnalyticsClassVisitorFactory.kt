@@ -15,14 +15,13 @@ import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
 
 /**
  * AGP instrumentation factory that creates ASM class visitors for automatic screen tracking.
  *
  * This factory is the entry point for the Analytics Annotation Plugin's bytecode transformation.
- * It creates [AnalyticsClassVisitor] instances that scan for @TrackScreen, @TrackScreenComposable,
- * and @Trackable annotations, then injects tracking code at appropriate lifecycle points.
+ * It creates [AnalyticsClassVisitor] instances that scan for @TrackScreen and @Trackable
+ * annotations, then injects tracking code at appropriate lifecycle points.
  *
  * ## Transformation Strategy
  *
@@ -36,12 +35,10 @@ import org.objectweb.asm.Type
  * ## Supported Annotations
  *
  * - **@TrackScreen**: For Activities and Fragments - injects tracking in onCreate/onViewCreated
- * - **@TrackScreenComposable**: For Composable functions - wraps tracking in LaunchedEffect
  * - **@Trackable**: For classes with @Track method annotations - enables method-level tracking
  *
  * @see AnalyticsClassVisitor
  * @see com.shalan.analytics.annotation.TrackScreen
- * @see com.shalan.analytics.compose.TrackScreenComposable
  */
 abstract class AnalyticsClassVisitorFactory :
     AsmClassVisitorFactory<AnalyticsClassVisitorFactory.Parameters> {
@@ -70,11 +67,6 @@ abstract class AnalyticsClassVisitorFactory :
         @get:Input
         @get:Optional
         val trackFragments: Property<Boolean>
-
-        /** Whether to track Composable functions with @TrackScreenComposable annotation. */
-        @get:Input
-        @get:Optional
-        val trackComposables: Property<Boolean>
 
         /** List of package prefixes to include for instrumentation (e.g., ["com.myapp."]). */
         @get:Input
@@ -223,14 +215,13 @@ abstract class AnalyticsClassVisitorFactory :
      * This visitor implements a two-pass strategy:
      *
      * **Pass 1 (Scanning):**
-     * - Visits class and method annotations to detect @TrackScreen, @TrackScreenComposable, @Trackable
-     * - Collects metadata about screen names, class types (Activity/Fragment/Composable)
+     * - Visits class and method annotations to detect @TrackScreen, @Trackable
+     * - Collects metadata about screen names, class types (Activity/Fragment)
      * - Identifies lifecycle methods that need instrumentation
      *
      * **Pass 2 (Transformation):**
      * - In [visitEnd], generates helper methods and injects tracking calls
      * - For Activities/Fragments: Injects `__injectAnalyticsTracking()` method and calls it after super lifecycle calls
-     * - For Composables: Injects `TrackScreenOnce()` call at function start
      *
      * @property parameters Plugin configuration parameters
      * @property className The fully qualified name of the class being visited
@@ -244,7 +235,6 @@ abstract class AnalyticsClassVisitorFactory :
         private var annotationInfo: TrackingAnnotationInfo? = null
         private var currentAnnotationInfo: TrackingAnnotationInfo? = null
         private var hasTrackScreenAnnotation = false
-        private var hasTrackScreenComposableAnnotation = false
         private var hasTrackableAnnotation = false
         private var screenName: String? = null
         private var screenClass: String? = null // Used in TrackScreenAnnotationVisitor and createAnnotationInfo
@@ -292,7 +282,7 @@ abstract class AnalyticsClassVisitorFactory :
         }
 
         /**
-         * Visits class-level annotations to detect @TrackScreen, @TrackScreenComposable, or @Trackable.
+         * Visits class-level annotations to detect @TrackScreen or @Trackable.
          *
          * When a tracking annotation is found, returns a specialized AnnotationVisitor that extracts
          * the annotation parameters (screenName, screenClass, etc.) for later use during transformation.
@@ -310,17 +300,6 @@ abstract class AnalyticsClassVisitorFactory :
                     return TrackScreenAnnotationVisitor(super.visitAnnotation(descriptor, visible))
                 }
 
-                "Lcom/shalan/analytics/compose/TrackScreenComposable;" -> {
-                    hasTrackScreenComposableAnnotation = true
-                    logDebug("AnalyticsClassVisitor: Found @TrackScreenComposable annotation on class $className")
-                    return TrackScreenComposableAnnotationVisitor(
-                        super.visitAnnotation(
-                            descriptor,
-                            visible,
-                        ),
-                    )
-                }
-
                 "Lcom/shalan/analytics/annotation/Trackable;" -> {
                     hasTrackableAnnotation = true
                     logDebug("AnalyticsClassVisitor: Found @Trackable annotation on class $className")
@@ -335,7 +314,6 @@ abstract class AnalyticsClassVisitorFactory :
          *
          * This method creates specialized MethodVisitors for different method types:
          * - **Lifecycle methods** (onCreate/onViewCreated): Wrapped in [LifecycleInstrumentingMethodVisitor]
-         * - **Composable methods**: Wrapped in [ComposableMethodVisitor]
          * - **Other methods**: Wrapped in TrackMethodVisitor for @Track annotation support
          *
          * @return A specialized MethodVisitor that may inject tracking code
@@ -347,77 +325,42 @@ abstract class AnalyticsClassVisitorFactory :
             signature: String?,
             exceptions: Array<out String>?,
         ): MethodVisitor {
-            try {
-                if (descriptor?.contains("Landroidx/compose/runtime/Composer;") == true) {
-                    logDebug("FORCE_DEBUG: Found Composer method $name with descriptor $descriptor")
-                }
-                logDebug("AnalyticsClassVisitor: [MODIFIED] Visiting method '$name' with descriptor '$descriptor' in class $className")
-                // Check if this is a method we should instrument
-                if (shouldCollectMethod(name, descriptor)) {
-                    methodsToInstrument.add(name ?: "")
-                    logDebug("AnalyticsClassVisitor: Collected method $name for potential instrumentation")
-                }
-
-                val methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions)
-
-                // If this is a lifecycle method we want to instrument, wrap with our instrumenting visitor
-                val isActivityOnCreate =
-                    name == "onCreate" && descriptor == "(Landroid/os/Bundle;)V" && isActivity
-                val isFragmentOnViewCreated =
-                    name == "onViewCreated" && descriptor == "(Landroid/view/View;Landroid/os/Bundle;)V" && isFragment
-                val isComposableFunction = isComposableMethod(name, descriptor)
-
-                logDebug("FORCE_DEBUG: isComposableFunction result for $name = $isComposableFunction")
-
-                logDebug(
-                    "AnalyticsClassVisitor: Method $name - isActivity: $isActivity, " +
-                        "isFragment: $isFragment, isComposable: $isComposableFunction",
-                )
-
-                logDebug("FORCE_DEBUG: About to check method path for $name")
-                PluginLogger.forceDebug(
-                    "FORCE_DEBUG: Method $name paths - onCreate: $isActivityOnCreate, onViewCreated: $isFragmentOnViewCreated",
-                )
-
-                if (isActivityOnCreate || isFragmentOnViewCreated) {
-                    PluginLogger.forceDebug("FORCE_DEBUG: Taking lifecycle path for method: $name")
-                    logDebug("AnalyticsClassVisitor: Wrapping $name method for potential instrumentation")
-                    return LifecycleInstrumentingMethodVisitor(api, methodVisitor, name ?: "unknown")
-                } else if (isComposableFunction) {
-                    PluginLogger.forceDebug("FORCE_DEBUG: Taking composable path for method: $name")
-                    PluginLogger.forceDebug("Creating ComposableMethodVisitor for $name")
-                    logDebug("AnalyticsClassVisitor: Wrapping Composable $name method for potential instrumentation")
-                    return ComposableMethodVisitor(api, methodVisitor, name ?: "unknown", descriptor ?: "")
-                }
-
-                PluginLogger.forceDebug("FORCE_DEBUG: Taking TrackMethodVisitor path for method: $name")
-                PluginLogger.forceDebug("FORCE_DEBUG: About to create TrackMethodVisitor for method: $name")
-
-                // Check if this method might have @Track annotation and wrap with TrackMethodVisitor
-                val methodTrackingEnabled = parameters.methodTrackingEnabled.getOrElse(true)
-                val maxParametersPerMethod = parameters.maxParametersPerMethod.getOrElse(10)
-                val excludeMethods = parameters.excludeMethods.getOrElse(emptyList()).toSet()
-
-                PluginLogger.forceDebug(
-                    "Creating TrackMethodVisitor for method: $name, enabled: $methodTrackingEnabled",
-                )
-
-                return TrackMethodVisitor(
-                    api,
-                    methodVisitor,
-                    name ?: "unknown",
-                    descriptor ?: "",
-                    className,
-                    access,
-                    methodTrackingEnabled = methodTrackingEnabled,
-                    maxParametersPerMethod = maxParametersPerMethod,
-                    excludeMethods = excludeMethods,
-                )
-            } catch (e: Exception) {
-                PluginLogger.forceDebug("FORCE_DEBUG: Exception in visitMethod for $name: ${e.message}")
-                e.printStackTrace()
-                throw e
+            logDebug("AnalyticsClassVisitor: Visiting method '$name' with descriptor '$descriptor' in class $className")
+            // Check if this is a method we should instrument
+            if (shouldCollectMethod(name, descriptor)) {
+                methodsToInstrument.add(name ?: "")
+                logDebug("AnalyticsClassVisitor: Collected method $name for potential instrumentation")
             }
+
+            val methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions)
+
+            // If this is a lifecycle method we want to instrument, wrap with our instrumenting visitor
+            val isActivityOnCreate =
+                name == "onCreate" && descriptor == "(Landroid/os/Bundle;)V" && isActivity
+            val isFragmentOnViewCreated =
+                name == "onViewCreated" && descriptor == "(Landroid/view/View;Landroid/os/Bundle;)V" && isFragment
+
+            if (isActivityOnCreate || isFragmentOnViewCreated) {
+                logDebug("AnalyticsClassVisitor: Wrapping $name method for potential instrumentation")
+                return LifecycleInstrumentingMethodVisitor(api, methodVisitor, name ?: "unknown")
+            }
+
+            // Check if this method might have @Track annotation and wrap with TrackMethodVisitor
+            val methodTrackingEnabled = parameters.methodTrackingEnabled.getOrElse(true)
+            val maxParametersPerMethod = parameters.maxParametersPerMethod.getOrElse(10)
+            val excludeMethods = parameters.excludeMethods.getOrElse(emptyList()).toSet()
+
+            return TrackMethodVisitor(
+                api,
+                methodVisitor,
+                name ?: "unknown",
+                descriptor ?: "",
+                className,
+                access,
+                methodTrackingEnabled = methodTrackingEnabled,
+                maxParametersPerMethod = maxParametersPerMethod,
+                excludeMethods = excludeMethods,
+            )
         }
 
         /**
@@ -427,17 +370,16 @@ abstract class AnalyticsClassVisitorFactory :
          * during the class scan, this method generates and injects the necessary tracking code:
          *
          * - For @TrackScreen: Generates `__injectAnalyticsTracking()` method
-         * - For @TrackScreenComposable: Ensures `TrackScreenOnce()` was called in method body
          * - For @Trackable: No class-level transformation needed (handled at method level)
          */
         override fun visitEnd() {
             try {
                 // Check if we found any tracking annotations OR @Trackable annotation for method-level tracking
-                val hasClassLevelAnnotations = hasTrackScreenAnnotation || hasTrackScreenComposableAnnotation
+                val hasClassLevelAnnotations = hasTrackScreenAnnotation
                 val hasTrackableMethods = hasTrackableAnnotation
 
                 if (hasClassLevelAnnotations && methodsToInstrument.isNotEmpty()) {
-                    // Process screen-level tracking annotations (@TrackScreen, @TrackScreenComposable)
+                    // Process screen-level tracking annotations (@TrackScreen)
                     annotationInfo = createAnnotationInfo()
 
                     if (annotationInfo != null) {
@@ -488,14 +430,6 @@ abstract class AnalyticsClassVisitorFactory :
                         className = className,
                     )
 
-                hasTrackScreenComposableAnnotation ->
-                    TrackingAnnotationInfo(
-                        screenName = screenName ?: extractScreenNameFromClassName(className),
-                        screenClass = screenClass?.takeIf { it.isNotEmpty() } ?: extractSimpleClassName(className),
-                        annotationType = TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE,
-                        className = className,
-                    )
-
                 else -> null
             }
         }
@@ -519,12 +453,6 @@ abstract class AnalyticsClassVisitorFactory :
                     // For Activities and Fragments, inject into lifecycle methods
                     injectTrackingCallIntoMethod(annotationInfo)
                     logDebug("AnalyticsClassVisitor: Injected tracking call for screen: ${annotationInfo.screenName}")
-                }
-
-                TrackingAnnotationInfo.AnnotationType.TRACK_SCREEN_COMPOSABLE -> {
-                    // For Composables, no need to inject __injectAnalyticsTracking method
-                    // The TrackScreenOnce composable is called directly in ComposableMethodVisitor.visitCode()
-                    logDebug("AnalyticsClassVisitor: Composable tracking injection completed for ${annotationInfo.screenName}")
                 }
             }
         }
@@ -611,158 +539,6 @@ abstract class AnalyticsClassVisitorFactory :
         }
 
         /**
-         * MethodVisitor that injects TrackScreenOnce() calls at the start of Composable functions.
-         *
-         * This visitor scans Composable methods for @TrackScreenComposable annotations and injects
-         * a call to `TrackScreenOnce()` at the beginning of the function body. TrackScreenOnce wraps
-         * the tracking call in a LaunchedEffect(Unit) to prevent duplicate events on recomposition.
-         *
-         * The visitor also validates that @TrackScreenComposable is only used on @Composable functions.
-         */
-        private inner class ComposableMethodVisitor(
-            api: Int,
-            private val delegate: MethodVisitor,
-            private val methodName: String,
-            private val methodDescriptor: String,
-        ) : MethodVisitor(api, delegate) {
-            private var methodHasTrackScreenComposableAnnotation = false
-            private var methodHasComposableAnnotation = false
-            private var methodScreenName: String? = null
-            private var hasInjectedTracking = false
-
-            override fun visitAnnotation(
-                descriptor: String?,
-                visible: Boolean,
-            ): AnnotationVisitor? {
-                when (descriptor) {
-                    "Landroidx/compose/runtime/Composable;" -> {
-                        methodHasComposableAnnotation = true
-                        logDebug("AnalyticsClassVisitor: Found @Composable annotation on method $methodName")
-                        return delegate.visitAnnotation(descriptor, visible)
-                    }
-                    "Lcom/shalan/analytics/compose/TrackScreenComposable;" -> {
-                        methodHasTrackScreenComposableAnnotation = true
-                        hasTrackScreenComposableAnnotation = true
-                        PluginLogger.forceDebug("Found @TrackScreenComposable annotation on method $methodName")
-                        logDebug("AnalyticsClassVisitor: Found @TrackScreenComposable annotation on method $methodName")
-                        return ComposableAnnotationVisitor(
-                            delegate.visitAnnotation(
-                                descriptor,
-                                visible,
-                            ),
-                        )
-                    }
-                }
-                return delegate.visitAnnotation(descriptor, visible)
-            }
-
-            override fun visitCode() {
-                // Call the original visitCode
-                delegate.visitCode()
-
-                // Validate that @TrackScreenComposable is only used with @Composable functions
-                if (methodHasTrackScreenComposableAnnotation && !methodHasComposableAnnotation) {
-                    PluginLogger.error(
-                        "WARNING: @TrackScreenComposable annotation found on method '$methodName' " +
-                            "which is not annotated with @Composable. This annotation should only be used " +
-                            "on Composable functions. Please either:\n" +
-                            "1. Add @Composable annotation to the function, or\n" +
-                            "2. Use @Track annotation instead for regular functions.",
-                    )
-                }
-
-                // Inject tracking call at the beginning of the Composable function
-                // but only if this method has @TrackScreenComposable annotation AND @Composable annotation
-                if (methodHasTrackScreenComposableAnnotation && methodHasComposableAnnotation &&
-                    methodScreenName != null && !hasInjectedTracking
-                ) {
-                    hasInjectedTracking = true
-                    logDebug(
-                        "AnalyticsClassVisitor: Injecting TrackScreenOnce call at start of Composable $methodName " +
-                            "with screenName: $methodScreenName",
-                    )
-
-                    // Instead of calling __injectAnalyticsTracking, call the TrackScreenOnce composable
-                    // This ensures the tracking is wrapped in a LaunchedEffect to prevent duplicate events on recomposition
-
-                    // Push screenName parameter
-                    delegate.visitLdcInsn(methodScreenName)
-
-                    // Push screenClass parameter (use method name or extracted class name)
-                    val screenClass = extractSimpleClassName(className)
-                    delegate.visitLdcInsn(screenClass)
-
-                    // Push empty map for parameters
-                    delegate.visitMethodInsn(
-                        Opcodes.INVOKESTATIC,
-                        "java/util/Collections",
-                        "emptyMap",
-                        "()Ljava/util/Map;",
-                        false,
-                    )
-
-                    // Call TrackScreenOnce(screenName, screenClass, parameters, $composer, $changed)
-                    // Note: Composable functions have additional Composer and changed parameters
-                    // We need to pass through the Composer parameter from the current method
-                    delegate.visitVarInsn(Opcodes.ALOAD, getComposerParameterIndex())
-                    delegate.visitInsn(Opcodes.ICONST_0) // $changed parameter = 0
-
-                    delegate.visitMethodInsn(
-                        Opcodes.INVOKESTATIC,
-                        "com/shalan/analytics/compose/TrackScreenOnceKt",
-                        "TrackScreenOnce",
-                        "(Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Landroidx/compose/runtime/Composer;I)V",
-                        false,
-                    )
-                }
-            }
-
-            private fun getComposerParameterIndex(): Int {
-                // The Composer parameter is typically near the end of the parameter list
-                // We need to calculate the local variable index based on method descriptor
-                val paramTypes = Type.getArgumentTypes(methodDescriptor)
-                var localVarIndex = 0
-
-                // Composable functions are typically static (top-level functions)
-                // If this were an instance method, slot 0 would be 'this'
-                // For now we assume static methods for top-level composables
-
-                // Find the Composer parameter by scanning through the parameters
-                paramTypes.forEach { type ->
-                    if (type.descriptor.contains("Landroidx/compose/runtime/Composer;")) {
-                        return localVarIndex
-                    }
-                    localVarIndex += type.size // Type.size() returns 2 for long/double, 1 for others
-                }
-
-                // Fallback: if we didn't find the Composer, return the current index
-                // This should not happen for valid composable functions
-                logDebug("WARNING: Could not find Composer parameter in method $methodName")
-                return localVarIndex
-            }
-
-            private inner class ComposableAnnotationVisitor(
-                private val delegate: AnnotationVisitor?,
-            ) : AnnotationVisitor(api, delegate) {
-                override fun visit(
-                    name: String?,
-                    value: Any?,
-                ) {
-                    when (name) {
-                        "value", "screenName" -> {
-                            methodScreenName = value as? String
-                            screenName = methodScreenName // Also set the class-level screenName
-                            PluginLogger.forceDebug("Extracted screenName: $methodScreenName")
-                        }
-
-                        else -> value?.let { annotationParameters[name ?: ""] = it }
-                    }
-                    delegate?.visit(name, value)
-                }
-            }
-        }
-
-        /**
          * Generates the `__injectAnalyticsTracking()` helper method for Activities/Fragments.
          *
          * This method generates bytecode that creates a private method which calls
@@ -834,8 +610,6 @@ abstract class AnalyticsClassVisitorFactory :
             return when {
                 isActivity && methodName == "onCreate" && descriptor == "(Landroid/os/Bundle;)V" -> true
                 isFragment && methodName == "onViewCreated" && descriptor == "(Landroid/view/View;Landroid/os/Bundle;)V" -> true
-                // Composable functions typically have descriptors with Composer parameter
-                isComposableMethod(methodName, descriptor) -> true
                 else -> false
             }
         }
@@ -871,27 +645,6 @@ abstract class AnalyticsClassVisitorFactory :
 
                 else -> false
             }
-        }
-
-        /**
-         * Checks if the given method is a Jetpack Compose Composable function.
-         *
-         * Composable functions are identified by having a Composer parameter in their descriptor.
-         *
-         * @param methodName The name of the method to check
-         * @param descriptor The method descriptor containing parameter and return types
-         * @return True if the method is a Composable function, false otherwise
-         */
-        private fun isComposableMethod(
-            methodName: String?,
-            descriptor: String?,
-        ): Boolean {
-            // Composable functions have specific signatures with Composer parameter
-            val hasComposer = descriptor?.contains("Landroidx/compose/runtime/Composer;") == true
-
-            logDebug("isComposableMethod($methodName, $descriptor) = $hasComposer")
-
-            return hasComposer
         }
 
         /**
@@ -946,27 +699,6 @@ abstract class AnalyticsClassVisitorFactory :
                 currentAnnotationInfo = createAnnotationInfo()
                 logDebug("AnalyticsClassVisitor: Set currentAnnotationInfo: $currentAnnotationInfo")
                 delegate?.visitEnd()
-            }
-        }
-
-        /**
-         * AnnotationVisitor that extracts parameters from @TrackScreenComposable annotations.
-         *
-         * Captures the screenName parameter from @TrackScreenComposable annotations on classes
-         * and stores it in the outer class's state for use during bytecode generation.
-         */
-        private inner class TrackScreenComposableAnnotationVisitor(
-            private val delegate: AnnotationVisitor?,
-        ) : AnnotationVisitor(api, delegate) {
-            override fun visit(
-                name: String?,
-                value: Any?,
-            ) {
-                when (name) {
-                    "value", "screenName" -> screenName = value as? String
-                    else -> value?.let { annotationParameters[name ?: ""] = it }
-                }
-                delegate?.visit(name, value)
             }
         }
 

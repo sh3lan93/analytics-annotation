@@ -15,7 +15,6 @@ class AnalyticsPluginExtensionTest {
         assertFalse(extension.debugMode)
         assertTrue(extension.trackActivities)
         assertTrue(extension.trackFragments)
-        assertTrue(extension.trackComposables)
         assertTrue(extension.includePackages.isEmpty())
         assertTrue(extension.excludePackages.isEmpty())
     }
@@ -28,7 +27,6 @@ class AnalyticsPluginExtensionTest {
         extension.debugMode = true
         extension.trackActivities = false
         extension.trackFragments = false
-        extension.trackComposables = false
         extension.includePackages = setOf("com.test")
         extension.excludePackages = setOf("com.exclude")
 
@@ -36,7 +34,6 @@ class AnalyticsPluginExtensionTest {
         assertTrue(extension.debugMode)
         assertFalse(extension.trackActivities)
         assertFalse(extension.trackFragments)
-        assertFalse(extension.trackComposables)
         assertEquals(setOf("com.test"), extension.includePackages)
         assertEquals(setOf("com.exclude"), extension.excludePackages)
     }
@@ -48,7 +45,6 @@ class AnalyticsPluginExtensionTest {
         extension.debugMode = true
         extension.trackActivities = false
         extension.trackFragments = false
-        extension.trackComposables = false
         extension.includePackages = setOf("com.include")
         extension.excludePackages = setOf("com.exclude")
 
@@ -58,7 +54,6 @@ class AnalyticsPluginExtensionTest {
         assertTrue(toString.contains("debugMode=true"))
         assertTrue(toString.contains("trackActivities=false"))
         assertTrue(toString.contains("trackFragments=false"))
-        assertTrue(toString.contains("trackComposables=false"))
         assertTrue(toString.contains("includePackages=[com.include]"))
         assertTrue(toString.contains("excludePackages=[com.exclude]"))
     }
@@ -114,15 +109,9 @@ class AnalyticsPluginExtensionTest {
         // Test individual tracking flags
         extension.trackActivities = false
         assertTrue(extension.trackFragments) // Should remain true
-        assertTrue(extension.trackComposables) // Should remain true
 
         extension.trackFragments = false
         assertFalse(extension.trackActivities) // Should remain false
-        assertTrue(extension.trackComposables) // Should remain true
-
-        extension.trackComposables = false
-        assertFalse(extension.trackActivities) // Should remain false
-        assertFalse(extension.trackFragments) // Should remain false
     }
 
     @Test

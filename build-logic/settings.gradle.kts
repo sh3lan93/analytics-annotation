@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":android-library", ":java-library", ":android-compose")
+include(":android-library", ":java-library")

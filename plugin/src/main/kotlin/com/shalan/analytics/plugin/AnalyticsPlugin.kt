@@ -67,7 +67,6 @@ class AnalyticsPlugin : Plugin<Project> {
                         params.debugMode.set(extension.debugMode)
                         params.trackActivities.set(extension.trackActivities)
                         params.trackFragments.set(extension.trackFragments)
-                        params.trackComposables.set(extension.trackComposables)
                         params.includePackages.set(extension.includePackages.toList())
                         params.excludePackages.set(extension.excludePackages.toList())
 

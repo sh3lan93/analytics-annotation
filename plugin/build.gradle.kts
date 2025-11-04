@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "dev.moshalan"
-version = "1.0.1"
+version = "2.0.0"
 
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -26,10 +26,10 @@ gradlePlugin {
             id = "dev.moshalan.easyanalytics"
             implementationClass = "com.shalan.analytics.plugin.AnalyticsPlugin"
             displayName = "Easy Analytics Plugin"
-            description = "Automatically injects analytics tracking code into Android Activities, Fragments, " +
-                "Composables, and methods at compile time using bytecode transformation. Supports screen-level " +
-                "tracking and method-level event tracking with parameter serialization, all with zero boilerplate."
-            tags = listOf("android", "analytics", "tracking", "bytecode", "annotation", "compose")
+            description = "Automatically injects analytics tracking code into Android Activities and Fragments " +
+                "at compile time using bytecode transformation. Supports screen-level tracking and method-level " +
+                "event tracking with parameter serialization, all with zero boilerplate."
+            tags = listOf("android", "analytics", "tracking", "bytecode", "annotation")
         }
     }
 }

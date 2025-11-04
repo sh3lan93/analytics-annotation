@@ -10,7 +10,7 @@ A powerful, annotation-based tracking Gradle plugin for Android that eliminates 
 
 - **🎯 Zero Boilerplate**: Just add annotations - no manual lifecycle management
 - **⚡ Compile-Time Safety**: Bytecode injection using ASM and modern AGP APIs
-- **🏗️ Architecture Agnostic**: Works with Activities, Fragments, Jetpack Compose, and ViewModels
+- **🏗️ Architecture Agnostic**: Works with Activities, Fragments, ViewModels, and more
 - **📊 Method-Level Tracking**: Track individual method calls with parameters and custom serialization
 - **🚀 High Performance**: Minimal build overhead with incremental build support
 - **🔧 Highly Configurable**: Fine-grained control over tracking behavior via Gradle plugin
@@ -37,12 +37,10 @@ analytics {
     debugMode = false //true if you are interested in see the debug messages while doing manipulation
     trackActivities = true
     trackFragments = true
-    trackComposables = true
 }
 
 dependencies {
     implementation("dev.moshalan:easy-analytics-core:1.0.1")
-    implementation("dev.moshalan:easy-analytics-compose:1.0.1") // For Compose support
 }
 ```
 
@@ -63,13 +61,11 @@ analytics {
     debugMode = false
     trackActivities = true
     trackFragments = true
-    trackComposables = true
 }
 
 dependencies {
     implementation(project(":feature:home"))  // Your feature modules
     implementation("dev.moshalan:easy-analytics-core:1.0.1")
-    implementation("dev.moshalan:easy-analytics-compose:1.0.1")
 }
 ```
 
@@ -155,19 +151,6 @@ class ProfileFragment : Fragment() {
 }
 ```
 
-#### Jetpack Compose
-```kotlin
-@TrackScreenComposable(screenName = "Settings Screen")
-@Composable
-fun SettingsScreen() {
-    // Analytics tracking is automatically injected at function start!
-    Column {
-        Text("Settings")
-        // Your UI content
-    }
-}
-```
-
 #### Method-Level Tracking
 Track individual method calls with parameters in any class (ViewModels, Services, etc.):
 
@@ -199,15 +182,14 @@ class UserViewModel : ViewModel() {
 The plugin automatically injects tracking code at compile time using bytecode transformation with ASM:
 
 - **Activities**: Code injected after `super.onCreate(savedInstanceState)`
-- **Fragments**: Code injected after `super.onViewCreated(view, savedInstanceState)`  
-- **Composables**: Tracking call injected at function start
+- **Fragments**: Code injected after `super.onViewCreated(view, savedInstanceState)`
 - **Method Tracking**: Calls injected at the beginning of `@Track` annotated methods
 
 #### Compile-Time Transformation
 The Gradle plugin approach is that:
 
-- Scans for `@TrackScreen`, `@TrackScreenComposable`, and `@Trackable` annotations during build
-- Generates bytecode to inject analytics tracking calls  
+- Scans for `@TrackScreen` and `@Trackable` annotations during build
+- Generates bytecode to inject analytics tracking calls
 - Provides zero runtime overhead for tracking
 - Supports incremental builds for fast compilation
 
@@ -219,15 +201,14 @@ analytics {
     enabled = true                    // Enable/disable plugin
     debugMode = true                  // Verbose logging
     trackActivities = true            // Track Activities
-    trackFragments = true             // Track Fragments  
-    trackComposables = true           // Track Composables
-    
+    trackFragments = true             // Track Fragments
+
     // Package filtering for performance
     includePackages = setOf(
         "com.myapp.features",
         "com.myapp.screens"
     )
-    
+
     excludePackages = setOf(
         "com.myapp.internal",
         "com.myapp.testing"
@@ -293,7 +274,6 @@ DEBUG: AnalyticsClassVisitor: Generated tracking method successfully
 analytics-annotation/
 ├── annotation/     # Annotations (@TrackScreen, @Trackable, @Track, @Param)
 ├── core/          # Core tracking logic, providers, and method tracking
-├── compose/       # Jetpack Compose integration (@TrackScreenComposable)
 ├── plugin/        # Gradle plugin for bytecode injection
 └── app/          # Sample application with examples
 ```
@@ -301,7 +281,7 @@ analytics-annotation/
 ### Build Integration
 The plugin integrates seamlessly with Android builds:
 
-1. **Annotation Scanning**: Detects `@TrackScreen`, `@TrackScreenComposable`, and `@Trackable` annotations
+1. **Annotation Scanning**: Detects `@TrackScreen` and `@Trackable` annotations
 2. **Bytecode Transformation**: Injects tracking calls using ASM
 3. **Method Instrumentation**: Processes `@Track` methods with parameter serialization
 4. **Incremental Support**: Only processes changed classes

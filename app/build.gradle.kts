@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     id("org.jlleitschuh.gradle.ktlint")
-    id("dev.moshalan.easyanalytics") version "1.0.0" // Analytics plugin for automatic screen tracking
+    id("dev.moshalan.easyanalytics") version "2.0.0" // Analytics plugin for automatic screen tracking
 }
 
 ktlint {
@@ -19,7 +19,6 @@ analytics {
     debugMode = true
     trackActivities = true
     trackFragments = true
-    trackComposables = true
 
     // Include only our app packages for optimization
     includePackages = setOf("com.shalan.analyticsannotation")
@@ -85,7 +84,6 @@ android {
 
         implementation(project(":annotation"))
         implementation(project(":core"))
-        implementation(project(":compose"))
         implementation(platform(libs.androidx.compose.bom))
         implementation(libs.androidx.activity.compose)
         implementation(libs.androidx.core.ktx)

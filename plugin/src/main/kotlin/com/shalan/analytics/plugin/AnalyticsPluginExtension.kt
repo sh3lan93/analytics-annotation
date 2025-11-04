@@ -22,11 +22,6 @@ open class AnalyticsPluginExtension {
     var trackFragments: Boolean = true
 
     /**
-     * Enable tracking for Composables
-     */
-    var trackComposables: Boolean = true
-
-    /**
      * Packages to exclude from tracking injection
      */
     var excludePackages: Set<String> = emptySet()
@@ -67,7 +62,6 @@ open class AnalyticsPluginExtension {
             "debugMode=$debugMode, " +
             "trackActivities=$trackActivities, " +
             "trackFragments=$trackFragments, " +
-            "trackComposables=$trackComposables, " +
             "excludePackages=$excludePackages, " +
             "includePackages=$includePackages, " +
             "methodTracking=$methodTracking" +

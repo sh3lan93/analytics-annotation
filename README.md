@@ -34,9 +34,7 @@ plugins {
 // Configure the analytics plugin
 analytics {
     enabled = true
-    debugMode = false //true if you are interested in see the debug messages while doing manipulation
-    trackActivities = true
-    trackFragments = true
+    debugMode = false // true if you want to see debug messages during bytecode transformation
 }
 
 dependencies {
@@ -59,8 +57,6 @@ plugins {
 analytics {
     enabled = true
     debugMode = false
-    trackActivities = true
-    trackFragments = true
 }
 
 dependencies {
@@ -199,9 +195,7 @@ The Gradle plugin approach is that:
 ```kotlin
 analytics {
     enabled = true                    // Enable/disable plugin
-    debugMode = true                  // Verbose logging
-    trackActivities = true            // Track Activities
-    trackFragments = true             // Track Fragments
+    debugMode = true                  // Verbose logging during bytecode transformation
 
     // Package filtering for performance
     includePackages = setOf(
@@ -230,12 +224,15 @@ class MyApplication : Application() {
                 providers.add(DebugAnalyticsProvider())
                 providers.add(FirebaseAnalyticsProvider()) // Custom provider
 
+                // Global error handler for all analytics operations
+                errorHandler = { throwable ->
+                    Log.e("Analytics", "Analytics error", throwable)
+                }
+
                 // Configure method tracking (optional)
                 methodTracking {
                     enabled = true
-                    errorHandler = { throwable ->
-                        Log.e("Analytics", "Method tracking error", throwable)
-                    }
+                    customSerializers.add(MyCustomParameterSerializer())
                 }
             }
         )

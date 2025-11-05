@@ -12,16 +12,6 @@ open class AnalyticsPluginExtension {
     var debugMode: Boolean = false
 
     /**
-     * Enable tracking for Activities
-     */
-    var trackActivities: Boolean = true
-
-    /**
-     * Enable tracking for Fragments
-     */
-    var trackFragments: Boolean = true
-
-    /**
      * Packages to exclude from tracking injection
      */
     var excludePackages: Set<String> = emptySet()
@@ -60,8 +50,6 @@ open class AnalyticsPluginExtension {
         return "AnalyticsPluginExtension(" +
             "enabled=$enabled, " +
             "debugMode=$debugMode, " +
-            "trackActivities=$trackActivities, " +
-            "trackFragments=$trackFragments, " +
             "excludePackages=$excludePackages, " +
             "includePackages=$includePackages, " +
             "methodTracking=$methodTracking" +

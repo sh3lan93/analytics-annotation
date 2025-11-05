@@ -13,8 +13,6 @@ class AnalyticsPluginExtensionTest {
 
         assertTrue(extension.enabled)
         assertFalse(extension.debugMode)
-        assertTrue(extension.trackActivities)
-        assertTrue(extension.trackFragments)
         assertTrue(extension.includePackages.isEmpty())
         assertTrue(extension.excludePackages.isEmpty())
     }
@@ -25,15 +23,11 @@ class AnalyticsPluginExtensionTest {
 
         extension.enabled = false
         extension.debugMode = true
-        extension.trackActivities = false
-        extension.trackFragments = false
         extension.includePackages = setOf("com.test")
         extension.excludePackages = setOf("com.exclude")
 
         assertFalse(extension.enabled)
         assertTrue(extension.debugMode)
-        assertFalse(extension.trackActivities)
-        assertFalse(extension.trackFragments)
         assertEquals(setOf("com.test"), extension.includePackages)
         assertEquals(setOf("com.exclude"), extension.excludePackages)
     }
@@ -43,8 +37,6 @@ class AnalyticsPluginExtensionTest {
         val extension = AnalyticsPluginExtension()
         extension.enabled = false
         extension.debugMode = true
-        extension.trackActivities = false
-        extension.trackFragments = false
         extension.includePackages = setOf("com.include")
         extension.excludePackages = setOf("com.exclude")
 
@@ -52,8 +44,6 @@ class AnalyticsPluginExtensionTest {
         assertNotNull(toString)
         assertTrue(toString.contains("enabled=false"))
         assertTrue(toString.contains("debugMode=true"))
-        assertTrue(toString.contains("trackActivities=false"))
-        assertTrue(toString.contains("trackFragments=false"))
         assertTrue(toString.contains("includePackages=[com.include]"))
         assertTrue(toString.contains("excludePackages=[com.exclude]"))
     }
@@ -100,18 +90,6 @@ class AnalyticsPluginExtensionTest {
         assertTrue(extension2.enabled)
         assertFalse(extension2.debugMode)
         assertTrue(extension2.includePackages.isEmpty())
-    }
-
-    @Test
-    fun `extension tracking flags work independently`() {
-        val extension = AnalyticsPluginExtension()
-
-        // Test individual tracking flags
-        extension.trackActivities = false
-        assertTrue(extension.trackFragments) // Should remain true
-
-        extension.trackFragments = false
-        assertFalse(extension.trackActivities) // Should remain false
     }
 
     @Test

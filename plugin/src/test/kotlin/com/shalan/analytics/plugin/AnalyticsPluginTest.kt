@@ -40,8 +40,9 @@ class AnalyticsPluginTest {
 
         val extension = project.extensions.getByType(AnalyticsPluginExtension::class.java)
         assertTrue(extension.enabled)
-        assertTrue(extension.trackActivities)
-        assertTrue(extension.trackFragments)
+        assertFalse(extension.debugMode)
+        assertTrue(extension.includePackages.isEmpty())
+        assertTrue(extension.excludePackages.isEmpty())
     }
 
     @Test
@@ -81,16 +82,12 @@ class AnalyticsPluginTest {
         val extension = project.extensions.getByType(AnalyticsPluginExtension::class.java)
         extension.enabled = false
         extension.debugMode = true
-        extension.trackActivities = false
-        extension.trackFragments = false
         extension.includePackages = setOf("com.test.include")
         extension.excludePackages = setOf("com.test.exclude")
 
         // Verify configuration
         assertFalse(extension.enabled)
         assertTrue(extension.debugMode)
-        assertFalse(extension.trackActivities)
-        assertFalse(extension.trackFragments)
         assertEquals(setOf("com.test.include"), extension.includePackages)
         assertEquals(setOf("com.test.exclude"), extension.excludePackages)
     }

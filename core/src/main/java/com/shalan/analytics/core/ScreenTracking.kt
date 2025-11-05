@@ -66,7 +66,7 @@ object ScreenTracking {
         if (config.methodTracking.enabled) {
             MethodTrackingManager.initialize(
                 analyticsManager = analyticsManager,
-                errorHandler = config.methodTracking.errorHandler,
+                errorHandler = config.errorHandler,
             )
 
             // Register custom parameter serializers
@@ -138,6 +138,19 @@ object ScreenTracking {
     @JvmStatic
     fun getMethodTrackingConfig(): MethodTrackingConfig? {
         return if (::config.isInitialized) config.methodTracking else null
+    }
+
+    /**
+     * Gets the global error handler for analytics operations.
+     * This method is used by ASM-generated code and helper classes to report errors
+     * to the configured error handler.
+     *
+     * @return The error handler function if configured, null otherwise.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @JvmStatic
+    fun getErrorHandler(): ((Throwable) -> Unit)? {
+        return if (::config.isInitialized) config.errorHandler else null
     }
 
     /**

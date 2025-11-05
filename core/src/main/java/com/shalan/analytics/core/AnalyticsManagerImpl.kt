@@ -49,11 +49,8 @@ class AnalyticsManagerImpl(
                         ) + mergedParameters,
                     )
                 } catch (t: Throwable) {
-                    Log.e(
-                        "AnalyticsManager",
-                        "Failed to log screen view event to ${provider.javaClass.simpleName}",
-                        t,
-                    )
+                    // Report error to global error handler if configured
+                    ScreenTracking.getErrorHandler()?.invoke(t)
                 }
             }
         }
@@ -84,6 +81,8 @@ class AnalyticsManagerImpl(
                         "Failed to log event to ${provider.javaClass.simpleName}",
                         t,
                     )
+                    // Report error to global error handler if configured
+                    ScreenTracking.getErrorHandler()?.invoke(t)
                 }
             }
         }

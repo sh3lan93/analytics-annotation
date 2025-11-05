@@ -61,22 +61,20 @@ class AnalyticsConfigDslTest {
     }
 
     @Test
-    fun `methodTracking DSL extension allows error handler configuration`() {
+    fun `analyticsConfig DSL allows global error handler configuration`() {
         var capturedError: Throwable? = null
         val errorHandler: (Throwable) -> Unit = { capturedError = it }
 
         val config =
             analyticsConfig {
-                methodTracking {
-                    this.errorHandler = errorHandler
-                }
+                this.errorHandler = errorHandler
             }
 
-        assertEquals(errorHandler, config.methodTracking.errorHandler)
+        assertEquals(errorHandler, config.errorHandler)
 
         // Test that the error handler works
         val testException = RuntimeException("test error")
-        config.methodTracking.errorHandler?.invoke(testException)
+        config.errorHandler?.invoke(testException)
         assertEquals(testException, capturedError)
     }
 
@@ -139,10 +137,10 @@ class AnalyticsConfigDslTest {
         val config =
             analyticsConfig {
                 providers.add(provider)
+                this.errorHandler = errorHandler
 
                 methodTracking {
                     enabled = true
-                    this.errorHandler = errorHandler
                     customSerializers.add(customSerializer)
                 }
             }
@@ -151,9 +149,11 @@ class AnalyticsConfigDslTest {
         assertEquals(1, config.providers.size)
         assertEquals(provider, config.providers[0])
 
+        // Verify error handler configuration
+        assertEquals(errorHandler, config.errorHandler)
+
         // Verify method tracking configuration
         assertTrue(config.methodTracking.enabled)
-        assertEquals(errorHandler, config.methodTracking.errorHandler)
         assertEquals(1, config.methodTracking.customSerializers.size)
         assertEquals(customSerializer, config.methodTracking.customSerializers[0])
     }

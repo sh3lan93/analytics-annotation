@@ -42,7 +42,8 @@ object TrackScreenHelper {
             )
         } catch (e: Exception) {
             // Analytics should never crash the app
-            // Silently ignore errors in tracking
+            // Report error to configured error handler if available
+            ScreenTracking.getErrorHandler()?.invoke(e)
         }
     }
 }

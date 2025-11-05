@@ -3,7 +3,6 @@ package com.shalan.analytics.core
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -13,20 +12,16 @@ class MethodTrackingConfigTest {
         val config = MethodTrackingConfig()
 
         assertTrue(config.enabled)
-        assertNull(config.errorHandler)
         assertTrue(config.customSerializers.isEmpty())
     }
 
     @Test
     fun `MethodTrackingConfig properties can be modified`() {
         val config = MethodTrackingConfig()
-        val errorHandler: (Throwable) -> Unit = { }
 
         config.enabled = false
-        config.errorHandler = errorHandler
 
         assertFalse(config.enabled)
-        assertEquals(errorHandler, config.errorHandler)
     }
 
     @Test
@@ -47,28 +42,6 @@ class MethodTrackingConfigTest {
 
         assertEquals(1, config.customSerializers.size)
         assertEquals(mockSerializer, config.customSerializers[0])
-    }
-
-    @Test
-    fun `MethodTrackingConfig errorHandler can be null and non-null`() {
-        val config = MethodTrackingConfig()
-
-        // Initially null
-        assertNull(config.errorHandler)
-
-        // Can set to non-null
-        val handler1: (Throwable) -> Unit = { throw it }
-        config.errorHandler = handler1
-        assertEquals(handler1, config.errorHandler)
-
-        // Can set back to null
-        config.errorHandler = null
-        assertNull(config.errorHandler)
-
-        // Can set to different handler
-        val handler2: (Throwable) -> Unit = { println(it.message) }
-        config.errorHandler = handler2
-        assertEquals(handler2, config.errorHandler)
     }
 
     @Test

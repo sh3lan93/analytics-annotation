@@ -8,11 +8,20 @@ package com.shalan.analytics.core
  *   All registered providers will receive analytics events.
  * @property debugMode A boolean flag indicating whether the library is in debug mode.
  *   In debug mode, additional logging or debugging features might be enabled.
+ * @property errorHandler Custom error handler for analytics failures.
+ *   If not set, errors are silently ignored to prevent app crashes.
  * @property methodTracking Configuration for method-level tracking using @Track annotation.
  */
 class AnalyticsConfig {
     val providers = mutableListOf<AnalyticsProvider>()
     var debugMode: Boolean = false
+
+    /**
+     * Custom error handler for analytics failures globally.
+     * If not set, errors are silently ignored to prevent app crashes.
+     */
+    var errorHandler: ((Throwable) -> Unit)? = null
+
     val methodTracking = MethodTrackingConfig()
 }
 
@@ -26,12 +35,6 @@ class MethodTrackingConfig {
      * Default: true
      */
     var enabled: Boolean = true
-
-    /**
-     * Custom error handler for method tracking failures.
-     * If not set, errors are silently ignored to prevent app crashes.
-     */
-    var errorHandler: ((Throwable) -> Unit)? = null
 
     /**
      * Custom parameter serializers for method parameters.

@@ -16,9 +16,6 @@ ktlint {
 // Analytics plugin configuration
 analytics {
     enabled = true
-    debugMode = true
-    trackActivities = true
-    trackFragments = true
 
     // Include only our app packages for optimization
     includePackages = setOf("com.shalan.analyticsannotation")

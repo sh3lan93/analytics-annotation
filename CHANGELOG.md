@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2024-11-06
+
+### 🚜 Refactor
+
+- **BREAKING**: Remove Jetpack Compose tracking functionality - The entire `:compose` module, `@TrackScreenComposable` annotation, and related Compose-specific instrumentation have been removed to focus the library on bytecode transformation for Activities and Fragments
+- Remove `trackActivities` and `trackFragments` from extension - These configuration options are now obsolete as the presence of a `@TrackScreen` annotation is sufficient to enable tracking
+- **Centralize instrumentation logic** and add helper classes:
+  - Introduced `AnalyticsConstants.kt` for centralized constant management
+  - Introduced `AnnotationMetadata.kt` for type-safe annotation metadata handling
+  - Introduced `AnnotationExtractor.kt` for clean annotation parameter parsing
+  - Introduced `ClassTypeDetector.kt` for Activity/Fragment type detection
+  - Introduced `MethodInstrumentationStrategy.kt` for instrumentation strategy selection
+  - Introduced `LifecycleInstrumentingMethodVisitor.kt` for lifecycle method injection
+  - Introduced `TrackingLogger.kt` for optimized lazy-evaluation logging
+- **Centralize error handling** with a global `errorHandler` - Moved `errorHandler` from `MethodTrackingConfig` to `AnalyticsConfig` level for unified analytics error management across screen tracking, event logging, and method tracking
+
+### 📚 Documentation
+
+- Update README with simplified configuration - Removed references to Compose, removed obsolete configuration properties (`trackActivities`, `trackFragments`, `trackComposables`), and updated examples to reflect current API
+
 ## [1.0.1] - 2025-10-03
 
 ### 🚀 Features

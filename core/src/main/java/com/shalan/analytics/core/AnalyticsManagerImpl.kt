@@ -37,8 +37,10 @@ class AnalyticsManagerImpl(
         screenClass: String,
         parameters: Map<String, Any>,
     ) {
+        // Capture global parameters snapshot at call time, not at execution time
+        val globalParamsSnapshot = globalParameters.toMap()
         scope.launch {
-            val mergedParameters = globalParameters + parameters
+            val mergedParameters = globalParamsSnapshot + parameters
             providers.forEach { provider ->
                 try {
                     provider.logEvent(
@@ -69,9 +71,11 @@ class AnalyticsManagerImpl(
         parameters: Map<String, Any>,
         includeGlobalParameters: Boolean,
     ) {
+        // Capture global parameters snapshot at call time, not at execution time
+        val globalParamsSnapshot = globalParameters.toMap()
         scope.launch {
             val mergedParameters =
-                if (includeGlobalParameters) globalParameters + parameters else parameters
+                if (includeGlobalParameters) globalParamsSnapshot + parameters else parameters
             providers.forEach { provider ->
                 try {
                     provider.logEvent(eventName, mergedParameters)

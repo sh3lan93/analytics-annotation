@@ -250,7 +250,11 @@ abstract class AnalyticsClassVisitorFactory :
             try {
                 if (methodsToInstrument.isNotEmpty()) {
                     logger.debug { "Processing ${methodsToInstrument.size} instrumented methods" }
-                    injectTrackingMethod(annotationMetadata)
+                    // Use the extracted metadata from the annotationExtractor
+                    // This ensures @TrackScreen annotation values are properly captured
+                    val finalMetadata = annotationExtractor.lastExtractedMetadata
+                    logger.debug { "Using extracted annotation metadata: $finalMetadata" }
+                    injectTrackingMethod(finalMetadata)
                 } else {
                     logger.debug { "No methods to instrument" }
                 }
@@ -285,9 +289,12 @@ abstract class AnalyticsClassVisitorFactory :
             // Load 'this' reference
             methodVisitor.visitVarInsn(Opcodes.ALOAD, 0)
 
-            // Push parameters
-            methodVisitor.visitLdcInsn(metadata.screenName ?: extractScreenNameFromClassName(className))
-            methodVisitor.visitLdcInsn(metadata.screenClass ?: extractSimpleClassName(className))
+            // Push parameters using effective values that handle empty strings
+            // Ensures annotation's screenName is used; falls back to derived name only if annotation value is null or empty
+            val effectiveScreenName = metadata.effectiveScreenName(extractScreenNameFromClassName(className))
+            val effectiveScreenClass = metadata.effectiveScreenClass(extractSimpleClassName(className))
+            methodVisitor.visitLdcInsn(effectiveScreenName)
+            methodVisitor.visitLdcInsn(effectiveScreenClass)
 
             // Call TrackScreenHelper.trackScreen()
             methodVisitor.visitMethodInsn(

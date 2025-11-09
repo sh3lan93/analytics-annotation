@@ -13,6 +13,13 @@ class AnnotationExtractor(
     private val logger: TrackingLogger,
 ) {
     /**
+     * Stores the most recently extracted annotation metadata.
+     * Updated when @TrackScreen annotations are visited.
+     */
+    var lastExtractedMetadata: AnnotationMetadata = AnnotationMetadata.empty()
+        private set
+
+    /**
      * Creates an AnnotationVisitor that extracts @TrackScreen parameters.
      *
      * @param delegate The next visitor in the chain
@@ -71,6 +78,8 @@ class AnnotationExtractor(
 
         override fun visitEnd() {
             logger.debug { "Completed extracting @TrackScreen: $extractedMetadata" }
+            // Store the extracted metadata for later retrieval
+            lastExtractedMetadata = extractedMetadata
             delegate?.visitEnd()
         }
 

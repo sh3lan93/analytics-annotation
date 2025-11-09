@@ -1,6 +1,5 @@
 package com.shalan.analyticsannotation
 
-import androidx.lifecycle.ViewModelProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -86,13 +85,14 @@ class UserProfileViewModelTest {
         testAnalyticsManager.loggedEvents.clear()
 
         // Create a test profile
-        val testProfile = UserProfile(
-            id = "user_456",
-            name = "Jane Doe",
-            email = "jane@example.com",
-            age = 28,
-            isVerified = true,
-        )
+        val testProfile =
+            UserProfile(
+                id = "user_456",
+                name = "Jane Doe",
+                email = "jane@example.com",
+                age = 28,
+                isVerified = true,
+            )
 
         // Call tracked method
         viewModel.updateProfile(newProfile = testProfile)
@@ -124,21 +124,24 @@ class UserProfileViewModelTest {
         testAnalyticsManager.loggedEvents.clear()
 
         // Create test preferences
-        val testPreferences = UserPreferences(
-            theme = Theme.DARK,
-            notifications = NotificationSettings(
-                emailEnabled = true,
-                pushEnabled = false,
-                smsEnabled = true,
-                frequency = NotificationFrequency.DAILY,
-            ),
-            privacy = PrivacySettings(
-                profileVisibility = ProfileVisibility.PRIVATE,
-                dataSharing = false,
-                analyticsOptIn = true,
-            ),
-            language = "en",
-        )
+        val testPreferences =
+            UserPreferences(
+                theme = Theme.DARK,
+                notifications =
+                    NotificationSettings(
+                        emailEnabled = true,
+                        pushEnabled = false,
+                        smsEnabled = true,
+                        frequency = NotificationFrequency.DAILY,
+                    ),
+                privacy =
+                    PrivacySettings(
+                        profileVisibility = ProfileVisibility.PRIVATE,
+                        dataSharing = false,
+                        analyticsOptIn = true,
+                    ),
+                language = "en",
+            )
 
         val changedFields = listOf("theme", "notifications")
 
@@ -211,17 +214,19 @@ class UserProfileViewModelTest {
 
         // Create test parameters
         val operationType = "data_export"
-        val operationParams = mapOf(
-            "format" to "csv",
-            "includeMetadata" to true,
-        )
-        val result = OperationResult(
-            success = true,
-            message = "Operation completed successfully",
-            executionTimeMs = 1500L,
-            affectedRecords = 42,
-            warnings = listOf("Some old data was not exported"),
-        )
+        val operationParams =
+            mapOf(
+                "format" to "csv",
+                "includeMetadata" to true,
+            )
+        val result =
+            OperationResult(
+                success = true,
+                message = "Operation completed successfully",
+                executionTimeMs = 1500L,
+                affectedRecords = 42,
+                warnings = listOf("Some old data was not exported"),
+            )
 
         // Call tracked method
         viewModel.performComplexOperation(
@@ -313,14 +318,15 @@ class UserProfileViewModelTest {
     fun testUserProfileSerialization() {
         testAnalyticsManager.loggedEvents.clear()
 
-        val profile = UserProfile(
-            id = "123",
-            name = "Test User",
-            email = "test@example.com",
-            age = 30,
-            isVerified = true,
-            metadata = mapOf("source" to "signup", "verified_at" to "2024-01-01"),
-        )
+        val profile =
+            UserProfile(
+                id = "123",
+                name = "Test User",
+                email = "test@example.com",
+                age = 30,
+                isVerified = true,
+                metadata = mapOf("source" to "signup", "verified_at" to "2024-01-01"),
+            )
 
         viewModel.updateProfile(newProfile = profile)
 
@@ -337,13 +343,14 @@ class UserProfileViewModelTest {
         testAnalyticsManager.loggedEvents.clear()
 
         // Create profile with empty metadata (should not cause null issues)
-        val profile = UserProfile(
-            id = "id_null_test",
-            name = "User",
-            email = "user@test.com",
-            age = 25,
-            isVerified = false,
-        )
+        val profile =
+            UserProfile(
+                id = "id_null_test",
+                name = "User",
+                email = "user@test.com",
+                age = 25,
+                isVerified = false,
+            )
 
         viewModel.updateProfile(newProfile = profile)
 
@@ -385,21 +392,24 @@ class UserProfileViewModelTest {
     fun testComplexParametersWithDefaults() {
         testAnalyticsManager.loggedEvents.clear()
 
-        val preferences = UserPreferences(
-            theme = Theme.LIGHT,
-            notifications = NotificationSettings(
-                emailEnabled = true,
-                pushEnabled = true,
-                smsEnabled = false,
-                frequency = NotificationFrequency.WEEKLY,
-            ),
-            privacy = PrivacySettings(
-                profileVisibility = ProfileVisibility.PUBLIC,
-                dataSharing = true,
-                analyticsOptIn = true,
-            ),
-            // language uses default value "en"
-        )
+        val preferences =
+            UserPreferences(
+                theme = Theme.LIGHT,
+                notifications =
+                    NotificationSettings(
+                        emailEnabled = true,
+                        pushEnabled = true,
+                        smsEnabled = false,
+                        frequency = NotificationFrequency.WEEKLY,
+                    ),
+                privacy =
+                    PrivacySettings(
+                        profileVisibility = ProfileVisibility.PUBLIC,
+                        dataSharing = true,
+                        analyticsOptIn = true,
+                    ),
+                // language uses default value "en"
+            )
 
         viewModel.updatePreferences(
             userId = "default_test",

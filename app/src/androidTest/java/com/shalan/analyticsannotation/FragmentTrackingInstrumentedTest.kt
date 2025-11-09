@@ -25,7 +25,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class FragmentTrackingInstrumentedTest : BaseInstrumentedTest() {
-
     /**
      * Test that ExampleFragment with @TrackScreen annotation logs correct screen view event.
      * Verifies:

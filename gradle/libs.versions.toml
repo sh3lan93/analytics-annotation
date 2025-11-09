@@ -20,6 +20,7 @@ mockkAndroid = "1.14.4"
 orchestrator = "1.5.1"
 robolectric = "4.15.1"
 fragmentKtx = "1.8.8"
+fragmentTesting = "1.8.8"
 compose-bom = "2024.06.00"
 compose-compiler = "2.0.21"
 activity-compose = "1.9.0"
@@ -30,6 +31,7 @@ runtime = "1.8.3"
 uiautomator = "2.3.0"
 uiTestJunit4 = "1.8.3"
 uiTestManifest = "1.8.3"
+truth = "1.4.0"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
@@ -65,11 +67,13 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkAndroid" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+androidx-fragment-testing = { group = "androidx.fragment", name = "fragment-testing", version.ref = "fragmentTesting" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
 ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "uiTestJunit4" }
 ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "uiTestManifest" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

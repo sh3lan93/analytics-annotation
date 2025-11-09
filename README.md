@@ -86,7 +86,7 @@ The plugin will automatically instrument all `@TrackScreen` annotations in your 
 class FirebaseAnalyticsProvider(
     private val firebaseAnalytics: FirebaseAnalytics
 ) : AnalyticsProvider {
-    
+
     override fun logEvent(eventName: String, parameters: Map<String, Any>) {
         val bundle = Bundle().apply {
             parameters.forEach { (key, value) ->
@@ -101,6 +101,14 @@ class FirebaseAnalyticsProvider(
         }
         firebaseAnalytics.logEvent(eventName, bundle)
     }
+
+    override fun setUserId(userId: String?) {
+        // Set user ID in Firebase Analytics
+    }
+
+    override fun setUserProperty(key: String, value: String) {
+        // Set user properties in Firebase Analytics
+    }
 }
 ```
 
@@ -114,7 +122,7 @@ class MyApplication : Application() {
         ScreenTracking.initialize(
             config = analyticsConfig {
                 debugMode = BuildConfig.DEBUG
-                providers.add(DebugAnalyticsProvider())
+                providers.add(InMemoryDebugAnalyticsProvider())
                 // Add your analytics providers here
             }
         )
@@ -221,7 +229,7 @@ class MyApplication : Application() {
                 debugMode = BuildConfig.DEBUG
 
                 // Add analytics providers
-                providers.add(DebugAnalyticsProvider())
+                providers.add(InMemoryDebugAnalyticsProvider())
                 providers.add(FirebaseAnalyticsProvider()) // Custom provider
 
                 // Global error handler for all analytics operations
@@ -296,6 +304,378 @@ Performance benchmarks on the sample app:
 | Memory Overhead | Minimal | ✅ Minimal |
 
 The plugin only processes annotated classes during build time, ensuring minimal performance impact.
+
+## 🧪 Testing Analytics
+
+Testing analytics tracking is essential to ensure your analytics events are properly captured. This library provides several built-in mechanisms and testing utilities to verify your analytics implementation.
+
+### 1. Using Debug Providers in Development
+
+The easiest way to test analytics during development is to use the built-in debug providers in your development build:
+
+#### DebugAnalyticsProvider
+Logs all tracking events to Logcat for quick verification:
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                debugMode = BuildConfig.DEBUG
+
+                // Add debug provider to see events in Logcat and verify in tests
+                providers.add(InMemoryDebugAnalyticsProvider())
+
+                // Add your production provider
+                if (!BuildConfig.DEBUG) {
+                    providers.add(FirebaseAnalyticsProvider(Firebase.analytics))
+                }
+            }
+        )
+    }
+}
+```
+
+When you navigate through your app, you'll see output like:
+```
+D/AnalyticsProvider: Screen tracked: Home Screen with parameters: {category=all, sort=name}
+D/AnalyticsProvider: Screen tracked: Product Details with parameters: {product_id=123, price=99.99}
+```
+
+### 2. Unit Testing with Mock Providers
+
+Test your annotated classes in isolation using mock providers:
+
+```kotlin
+class AnalyticsTest {
+
+    @Test
+    fun `verify home screen tracking with parameters`() {
+        // Arrange
+        val mockProvider = mockk<AnalyticsProvider>()
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                providers.add(mockProvider)
+            }
+        )
+
+        // Act
+        val activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .start()
+            .resume()
+            .get()
+
+        // Assert
+        verify(exactly = 1) {
+            mockProvider.trackScreen("Home Screen", emptyMap())
+        }
+    }
+
+    @Test
+    fun `verify product details tracking with dynamic parameters`() {
+        // Arrange
+        val mockProvider = mockk<AnalyticsProvider>()
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                providers.add(mockProvider)
+            }
+        )
+
+        val testProduct = Product(
+            id = "123",
+            name = "Test Product",
+            price = 99.99
+        )
+
+        val intent = Intent(applicationContext, ProductDetailsActivity::class.java).apply {
+            putExtra("product", testProduct)
+        }
+
+        // Act
+        val activity = Robolectric.buildActivity(ProductDetailsActivity::class.java, intent)
+            .create()
+            .start()
+            .resume()
+            .get()
+
+        // Assert
+        verify(exactly = 1) {
+            mockProvider.trackScreen(
+                "Product Details",
+                match { params ->
+                    params["product_id"] == "123" &&
+                    params["product_name"] == "Test Product" &&
+                    params["price"] == 99.99
+                }
+            )
+        }
+    }
+}
+```
+
+### 3. Integration Testing with Debug Provider
+
+Verify analytics tracking in integration tests using the in-memory debug provider:
+
+```kotlin
+class AnalyticsIntegrationTest {
+
+    private lateinit var debugProvider: InMemoryDebugAnalyticsProvider
+
+    @Before
+    fun setup() {
+        debugProvider = InMemoryDebugAnalyticsProvider()
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                providers.add(debugProvider)
+            }
+        )
+    }
+
+    @Test
+    fun `verify navigation flow tracks all screens`() {
+        // Act
+        val activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .start()
+            .resume()
+            .get()
+
+        // Navigate to profile
+        activity.findViewById<Button>(R.id.profile_button).performClick()
+
+        // Assert
+        val events = debugProvider.getLoggedEvents()
+        assertEquals(2, events.size)
+
+        assertEquals("screen_view", events[0].eventName)
+        assertEquals("screen_view", events[1].eventName)
+        assertEquals("Home Screen", events[0].parameters["screen_name"])
+        assertEquals("Profile Screen", events[1].parameters["screen_name"])
+    }
+
+    @Test
+    fun `verify custom parameters are tracked correctly`() {
+        // Arrange
+        val customParams = mapOf(
+            "user_id" to "user_123",
+            "subscription_type" to "premium"
+        )
+
+        // Act
+        ScreenTracking.trackScreen("User Profile", customParams)
+
+        // Assert
+        val events = debugProvider.getLoggedEvents()
+        assertThat(events).isNotEmpty()
+        val lastEvent = events.last()
+        assertEquals("screen_view", lastEvent.eventName)
+        assertEquals("User Profile", lastEvent.parameters["screen_name"])
+        assertEquals("user_123", lastEvent.parameters["user_id"])
+        assertEquals("premium", lastEvent.parameters["subscription_type"])
+    }
+}
+```
+
+### 4. Testing Fragments with Parameters
+
+Verify that Fragment parameters are properly tracked:
+
+```kotlin
+@Test
+fun `verify fragment with parameters tracking`() {
+    // Arrange
+    val debugProvider = InMemoryDebugAnalyticsProvider()
+    ScreenTracking.initialize(
+        config = analyticsConfig {
+            providers.add(debugProvider)
+        }
+    )
+
+    // Act
+    val fragment = ProductListFragment().apply {
+        arguments = Bundle().apply {
+            putString("category", "electronics")
+            putString("sort", "price")
+        }
+    }
+
+    val activity = Robolectric.buildActivity(MainActivity::class.java)
+        .create()
+        .start()
+        .get()
+
+    activity.supportFragmentManager.beginTransaction()
+        .add(android.R.id.content, fragment)
+        .commitNow()
+
+    // Assert
+    val events = debugProvider.getLoggedEvents()
+    assertThat(events).isNotEmpty()
+    val lastEvent = events.last()
+    assertEquals("screen_view", lastEvent.eventName)
+    assertEquals("Product List", lastEvent.parameters["screen_name"])
+    assertEquals("electronics", lastEvent.parameters["category"])
+    assertEquals("price", lastEvent.parameters["sort"])
+}
+```
+
+### 5. Testing Method-Level Tracking (@Track)
+
+Verify that method-level analytics events are properly tracked:
+
+```kotlin
+@Test
+fun `verify method tracking with parameters`() {
+    // Arrange
+    val mockProvider = mockk<AnalyticsProvider>()
+    ScreenTracking.initialize(
+        config = analyticsConfig {
+            providers.add(mockProvider)
+        }
+    )
+
+    val viewModel = UserViewModel()
+
+    // Act
+    viewModel.loadUserProfile(
+        userId = "user_456",
+        source = "deep_link"
+    )
+
+    // Assert
+    verify(exactly = 1) {
+        mockProvider.trackScreen(
+            "user_profile_loaded",
+            match { params ->
+                params["user_id"] == "user_456" &&
+                params["source"] == "deep_link"
+            }
+        )
+    }
+}
+```
+
+### 6. Testing with Custom Analytics Providers
+
+Create a test provider to capture and verify analytics events in your tests:
+
+```kotlin
+class TestAnalyticsProvider : AnalyticsProvider {
+    private val capturedEvents = mutableListOf<AnalyticsEvent>()
+
+    override fun trackScreen(screenName: String, parameters: Map<String, Any>) {
+        capturedEvents.add(AnalyticsEvent(screenName, parameters, System.currentTimeMillis()))
+    }
+
+    fun getEvents(): List<AnalyticsEvent> = capturedEvents.toList()
+
+    fun clear() {
+        capturedEvents.clear()
+    }
+}
+
+// Usage in tests
+@Test
+fun `verify complete user journey tracking`() {
+    // Arrange
+    val testProvider = TestAnalyticsProvider()
+    ScreenTracking.initialize(
+        config = analyticsConfig {
+            providers.add(testProvider)
+        }
+    )
+
+    // Act
+    val activity = Robolectric.buildActivity(MainActivity::class.java)
+        .create()
+        .start()
+        .resume()
+        .get()
+
+    // Navigate through screens
+    activity.navigateToProfile()
+    activity.navigateToSettings()
+
+    // Assert
+    val events = testProvider.getEvents()
+    assertEquals(3, events.size)
+    assertEquals("Home Screen", events[0].screenName)
+    assertEquals("Profile Screen", events[1].screenName)
+    assertEquals("Settings Screen", events[2].screenName)
+}
+```
+
+### 7. Espresso UI Tests with Analytics Verification
+
+Verify analytics tracking during UI tests:
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+class AnalyticsUITest {
+
+    @get:Rule
+    val activityRule = ActivityScenario.launch(MainActivity::class.java)
+
+    private val debugProvider = InMemoryDebugAnalyticsProvider()
+
+    @Before
+    fun setup() {
+        ScreenTracking.initialize(
+            config = analyticsConfig {
+                providers.add(debugProvider)
+            }
+        )
+    }
+
+    @Test
+    fun testNavigationTrackingInUI() {
+        // Act
+        onView(withId(R.id.profile_button)).perform(click())
+
+        // Assert
+        val events = debugProvider.getLoggedEvents()
+        val profileScreenEvent = events.find { it.parameters["screen_name"] == "Profile Screen" }
+
+        assertNotNull(profileScreenEvent)
+    }
+}
+```
+
+### 8. Testing Best Practices
+
+- **Isolate Analytics from UI Tests**: Use mock providers instead of real analytics services in tests
+- **Verify Parameters**: Always assert that dynamic parameters are captured correctly
+- **Test Fragment Arguments**: Ensure Fragment parameters passed via Bundle are properly tracked
+- **Use Debug Provider in CI**: Enable InMemoryDebugAnalyticsProvider in CI builds to catch tracking issues
+- **Test Error Scenarios**: Verify that analytics failures don't crash your app using error handlers
+- **Performance Testing**: Monitor that analytics doesn't impact app startup time
+
+### 9. Debugging Analytics in Release Builds
+
+To debug analytics in release builds without exposing debug code, create a hidden debug menu:
+
+```kotlin
+class BuildConfigProvider {
+    companion object {
+        fun getDebugProvider(): AnalyticsProvider? {
+            return if (shouldShowDebugInfo()) {
+                InMemoryDebugAnalyticsProvider()
+            } else {
+                null
+            }
+        }
+
+        private fun shouldShowDebugInfo(): Boolean {
+            // Check BuildConfig or custom logic
+            return BuildConfig.DEBUG || isDebugDeviceEnabled()
+        }
+    }
+}
+```
 
 ## 🤝 Contributing
 

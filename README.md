@@ -645,38 +645,6 @@ class AnalyticsUITest {
 }
 ```
 
-### 8. Testing Best Practices
-
-- **Isolate Analytics from UI Tests**: Use mock providers instead of real analytics services in tests
-- **Verify Parameters**: Always assert that dynamic parameters are captured correctly
-- **Test Fragment Arguments**: Ensure Fragment parameters passed via Bundle are properly tracked
-- **Use Debug Provider in CI**: Enable InMemoryDebugAnalyticsProvider in CI builds to catch tracking issues
-- **Test Error Scenarios**: Verify that analytics failures don't crash your app using error handlers
-- **Performance Testing**: Monitor that analytics doesn't impact app startup time
-
-### 9. Debugging Analytics in Release Builds
-
-To debug analytics in release builds without exposing debug code, create a hidden debug menu:
-
-```kotlin
-class BuildConfigProvider {
-    companion object {
-        fun getDebugProvider(): AnalyticsProvider? {
-            return if (shouldShowDebugInfo()) {
-                InMemoryDebugAnalyticsProvider()
-            } else {
-                null
-            }
-        }
-
-        private fun shouldShowDebugInfo(): Boolean {
-            // Check BuildConfig or custom logic
-            return BuildConfig.DEBUG || isDebugDeviceEnabled()
-        }
-    }
-}
-```
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

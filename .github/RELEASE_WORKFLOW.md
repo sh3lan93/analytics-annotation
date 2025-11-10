@@ -180,7 +180,7 @@ This is normal if the version hasn't been bumped. Update the version in `plugin/
 The workflow installs git-cliff on demand. If installation fails, it falls back to git log.
 
 ### Changelog is empty
-- Ensure commits follow [conventional commit](../COMMIT_CONVENTIONS.md) format
+- Ensure commits follow [conventional commit](./COMMIT_CONVENTIONS.md) format
 - Check that commit types are defined in `cliff.toml`
 - Verify commits are between the tags git-cliff is analyzing
 

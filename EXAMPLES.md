@@ -20,25 +20,12 @@ class MainActivity : AppCompatActivity() {
 ```kotlin
 @TrackScreen(screenName = "Product List")
 class ProductListFragment : Fragment(), TrackedScreenParamsProvider {
-    
+
     override fun getTrackedScreenParams(): Map<String, Any> {
         return mapOf(
             "category" to (arguments?.getString("category") ?: "all"),
             "sort_order" to (arguments?.getString("sort") ?: "name")
         )
-    }
-}
-```
-
-### Composable Screen
-```kotlin
-@TrackScreenComposable(screenName = "Settings")
-@Composable
-fun SettingsScreen() {
-    // Analytics automatically tracked when composable is first composed
-    Column {
-        Text("Settings")
-        // Your UI content
     }
 }
 ```
@@ -105,58 +92,6 @@ class NavigationDrawerFragment : Fragment(), TrackedScreenParamsProvider {
     private fun getUserType(): String {
         return if (UserSession.isPremium()) "premium" else "free"
     }
-}
-```
-
-## Jetpack Compose Examples
-
-### Nested Composable Screens
-```kotlin
-@Composable
-fun ShoppingApp() {
-    NavHost(navController, startDestination = "home") {
-        composable("home") { HomeScreen() }
-        composable("cart") { CartScreen() }
-        composable("checkout") { CheckoutScreen() }
-    }
-}
-
-@TrackScreenComposable(screenName = "Home")
-@Composable
-fun HomeScreen() {
-    LazyColumn {
-        items(products) { product ->
-            ProductCard(product = product)
-        }
-    }
-}
-
-@TrackScreenComposable(screenName = "Shopping Cart")
-@Composable
-fun CartScreen() {
-    CartContent()
-}
-
-@TrackScreenComposable(screenName = "Checkout")
-@Composable
-fun CheckoutScreen() {
-    CheckoutFlow()
-}
-```
-
-### Parameterized Composable
-```kotlin
-// Note: Composable parameter tracking requires manual implementation
-@Composable
-fun ProductDetailsScreen(productId: String) {
-    // Manual tracking for parameterized composables, will be covered in the future
-    LaunchedEffect(productId) {
-        ScreenTracking.trackScreen("Product Details", mapOf(
-            "product_id" to productId
-        ))
-    }
-    
-    ProductDetailsContent(productId)
 }
 ```
 
@@ -291,8 +226,7 @@ analytics {
     debugMode = true
     trackActivities = true
     trackFragments = true
-    trackComposables = true
-    
+
     // Only track your app's packages
     includePackages = setOf("com.yourapp")
 }
@@ -312,8 +246,7 @@ analytics {
     debugMode = false
     trackActivities = true
     trackFragments = true
-    trackComposables = true
-    
+
     // Performance optimization
     includePackages = setOf(
         "com.yourapp.features",

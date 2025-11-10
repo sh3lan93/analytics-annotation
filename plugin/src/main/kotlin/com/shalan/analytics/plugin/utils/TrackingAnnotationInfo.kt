@@ -4,7 +4,7 @@ package com.shalan.analytics.plugin.utils
  * Data class representing tracking annotation information extracted from bytecode.
  *
  * This class is used internally by the plugin to store metadata about @TrackScreen
- * and @TrackScreenComposable annotations found during bytecode transformation.
+ * annotations found during bytecode transformation.
  *
  * @property screenName The display name of the screen (e.g., "Home Screen", "Product Details")
  * @property screenClass Optional custom class name for grouping analytics (defaults to actual class name)
@@ -23,8 +23,5 @@ data class TrackingAnnotationInfo(
     enum class AnnotationType {
         /** Used for Activities and Fragments with @TrackScreen annotation */
         TRACK_SCREEN,
-
-        /** Used for Composable functions with @TrackScreenComposable annotation */
-        TRACK_SCREEN_COMPOSABLE,
     }
 }

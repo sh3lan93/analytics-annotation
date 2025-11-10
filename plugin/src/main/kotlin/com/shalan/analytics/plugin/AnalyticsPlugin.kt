@@ -65,19 +65,13 @@ class AnalyticsPlugin : Plugin<Project> {
                         // Basic configuration
                         params.enabled.set(extension.enabled)
                         params.debugMode.set(extension.debugMode)
-                        params.trackActivities.set(extension.trackActivities)
-                        params.trackFragments.set(extension.trackFragments)
-                        params.trackComposables.set(extension.trackComposables)
                         params.includePackages.set(extension.includePackages.toList())
                         params.excludePackages.set(extension.excludePackages.toList())
 
                         // Method tracking configuration
                         params.methodTrackingEnabled.set(extension.methodTracking.enabled)
                         params.maxParametersPerMethod.set(extension.methodTracking.maxParametersPerMethod)
-                        params.validateAnnotations.set(extension.methodTracking.validateAnnotations)
                         params.excludeMethods.set(extension.methodTracking.excludeMethods.toList())
-                        params.includeClassPatterns.set(extension.methodTracking.includeClassPatterns.toList())
-                        params.excludeClassPatterns.set(extension.methodTracking.excludeClassPatterns.toList())
                     }
 
                     // Set frames computation mode for better performance

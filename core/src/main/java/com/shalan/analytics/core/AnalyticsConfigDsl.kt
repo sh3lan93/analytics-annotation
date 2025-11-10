@@ -7,6 +7,23 @@ package com.shalan.analytics.core
  * @param block A lambda with [AnalyticsConfig] as its receiver, allowing for direct configuration
  *   of [AnalyticsConfig] properties within the lambda.
  * @return A fully configured [AnalyticsConfig] instance.
+ *
+ * ## Usage Example:
+ * ```kotlin
+ * val config = analyticsConfig {
+ *     debugMode = true
+ *     errorHandler = { throwable ->
+ *         Log.e("Analytics", "Analytics error", throwable)
+ *     }
+ *     providers.add(LogcatAnalyticsProvider())
+ *     providers.add(DebugAnalyticsProvider())
+ *
+ *     methodTracking {
+ *         enabled = true
+ *         customSerializers.add(MyCustomParameterSerializer())
+ *     }
+ * }
+ * ```
  */
 fun analyticsConfig(block: AnalyticsConfig.() -> Unit): AnalyticsConfig {
     return AnalyticsConfig().apply(block)
@@ -16,6 +33,8 @@ fun analyticsConfig(block: AnalyticsConfig.() -> Unit): AnalyticsConfig {
  * A Kotlin DSL function for configuring method tracking within an [AnalyticsConfig] block.
  * This function provides a concise way to configure method-level tracking options.
  *
+ * Error handling is now configured at the global [AnalyticsConfig] level using the errorHandler property.
+ *
  * @param block A lambda with [MethodTrackingConfig] as its receiver for configuration.
  *
  * ## Usage Example:
@@ -24,11 +43,13 @@ fun analyticsConfig(block: AnalyticsConfig.() -> Unit): AnalyticsConfig {
  *     debugMode = true
  *     providers.add(LogcatAnalyticsProvider())
  *
+ *     // Global error handler for all analytics operations
+ *     errorHandler = { throwable ->
+ *         Log.e("Analytics", "Analytics error", throwable)
+ *     }
+ *
  *     methodTracking {
  *         enabled = true
- *         errorHandler = { throwable ->
- *             Log.e("Analytics", "Method tracking error", throwable)
- *         }
  *         customSerializers.add(MyCustomParameterSerializer())
  *     }
  * }

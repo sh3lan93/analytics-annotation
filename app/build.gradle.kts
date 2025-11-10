@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     id("org.jlleitschuh.gradle.ktlint")
-    id("dev.moshalan.easyanalytics") version "1.0.0" // Analytics plugin for automatic screen tracking
+    id("dev.moshalan.easyanalytics") version "2.0.0" // Analytics plugin for automatic screen tracking
 }
 
 ktlint {
@@ -16,10 +16,6 @@ ktlint {
 // Analytics plugin configuration
 analytics {
     enabled = true
-    debugMode = true
-    trackActivities = true
-    trackFragments = true
-    trackComposables = true
 
     // Include only our app packages for optimization
     includePackages = setOf("com.shalan.analyticsannotation")
@@ -85,7 +81,6 @@ android {
 
         implementation(project(":annotation"))
         implementation(project(":core"))
-        implementation(project(":compose"))
         implementation(platform(libs.androidx.compose.bom))
         implementation(libs.androidx.activity.compose)
         implementation(libs.androidx.core.ktx)
@@ -96,6 +91,8 @@ android {
         implementation(libs.androidx.ui.tooling.preview)
         implementation(libs.androidx.material3)
         testImplementation(libs.junit)
+        testImplementation(libs.robolectric)
+        testImplementation(libs.androidx.lifecycle.runtime.ktx)
         androidTestImplementation(libs.androidx.junit)
         androidTestImplementation(libs.androidx.espresso.core)
         androidTestImplementation(libs.androidx.runner)
@@ -103,6 +100,10 @@ android {
         androidTestImplementation(libs.androidx.junit.v121)
         androidTestImplementation(libs.androidx.espresso.intents)
         androidTestImplementation(libs.androidx.orchestrator)
+        androidTestImplementation(libs.truth)
+        androidTestImplementation(libs.androidx.core)
+        androidTestImplementation(libs.androidx.fragment.ktx)
+        androidTestImplementation(libs.androidx.fragment.testing)
         debugImplementation(libs.androidx.espresso.idling.resource)
         debugImplementation(libs.androidx.ui.tooling)
         debugImplementation(libs.androidx.ui.test.manifest)

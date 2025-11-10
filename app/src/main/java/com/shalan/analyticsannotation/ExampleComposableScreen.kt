@@ -18,9 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.shalan.analytics.annotation.Param
 import com.shalan.analytics.annotation.Track
 import com.shalan.analytics.annotation.Trackable
-import com.shalan.analytics.compose.TrackScreenComposable
 
-@TrackScreenComposable(screenName = "Example Composable Screen")
 @Composable
 fun ExampleComposableScreen() {
     Box(

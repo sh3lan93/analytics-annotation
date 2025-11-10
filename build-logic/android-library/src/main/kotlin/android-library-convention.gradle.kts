@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.moshalan"
-version = "1.0.1"
+version = "2.0.0"
 
 ktlint {
     reporters {

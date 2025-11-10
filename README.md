@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE.md)
-[![Version](https://img.shields.io/badge/version-1.0.1-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation/releases)
+[![Version](https://img.shields.io/badge/version-2.0.0-brightgreen.svg)](https://github.com/sh3lan93/analytics-annotation/releases)
 
 A powerful, annotation-based tracking Gradle plugin for Android that eliminates boilerplate code by automatically injecting analytics tracking at compile time using bytecode transformation.
 
@@ -28,7 +28,7 @@ A powerful, annotation-based tracking Gradle plugin for Android that eliminates 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("dev.moshalan.easyanalytics") version "1.0.1"
+    id("dev.moshalan.easyanalytics") version "2.0.0"
 }
 
 // Configure the analytics plugin
@@ -38,7 +38,7 @@ analytics {
 }
 
 dependencies {
-    implementation("dev.moshalan:easy-analytics-core:1.0.1")
+    implementation("dev.moshalan:easy-analytics-core:2.0.0")
 }
 ```
 
@@ -51,7 +51,7 @@ Apply the plugin only to your app module. Feature/library modules just need the 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("dev.moshalan.easyanalytics") version "1.0.1"  // Apply plugin here
+    id("dev.moshalan.easyanalytics") version "2.0.0"  // Apply plugin here
 }
 
 analytics {
@@ -61,7 +61,7 @@ analytics {
 
 dependencies {
     implementation(project(":feature:home"))  // Your feature modules
-    implementation("dev.moshalan:easy-analytics-core:1.0.1")
+    implementation("dev.moshalan:easy-analytics-core:2.0.0")
 }
 ```
 
@@ -74,8 +74,7 @@ plugins {
 }
 
 dependencies {
-    implementation("dev.moshalan:easy-analytics-core:1.0.1")
-    implementation("dev.moshalan:easy-analytics-annotation:1.0.1")
+    implementation("dev.moshalan:easy-analytics-core:2.0.0")
 }
 ```
 

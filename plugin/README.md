@@ -27,7 +27,7 @@ Add the plugin to your `app/build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("dev.moshalan.easyanalytics") version "1.0.0"
+    id("dev.moshalan.easyanalytics") version "2.0.0"
 }
 
 analytics {

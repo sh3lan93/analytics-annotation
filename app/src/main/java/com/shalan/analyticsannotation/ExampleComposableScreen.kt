@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.shalan.analytics.annotation.Param
 import com.shalan.analytics.annotation.Track
 import com.shalan.analytics.annotation.Trackable
+import com.shalan.analytics.core.ScreenTracking
 
 @Composable
 fun ExampleComposableScreen() {
@@ -101,7 +102,14 @@ fun ProductCard(
 ) {
     // Track when this component is displayed
     LaunchedEffect(productId) {
-        ComposableScreenTracker.trackProductCardDisplayed(productId, productName, "composable_screen")
+        ScreenTracking.getManager().logEvent(
+            "product_card_displayed",
+            mapOf(
+                "product_id" to productId,
+                "product_name" to productName,
+                "display_context" to "card"
+            )
+        )
     }
 
     Card(
@@ -119,7 +127,11 @@ fun ProductCard(
 
             Button(
                 onClick = {
-                    ComposableScreenTracker.handleProductClick(productId, productName, "card_button")
+                    ComposableScreenTracker.handleProductClick(
+                        productId,
+                        productName,
+                        "card_button"
+                    )
                 },
             ) {
                 Text("View Product")

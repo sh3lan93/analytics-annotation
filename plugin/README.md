@@ -76,15 +76,6 @@ class ProfileActivity : AppCompatActivity(), TrackedScreenParamsProvider {
 }
 ```
 
-### Composable Tracking
-```kotlin
-@TrackScreenComposable("Settings Screen")
-@Composable
-fun SettingsScreen() {
-    // Plugin automatically injects tracking at function start
-}
-```
-
 ### Method-Level Event Tracking
 Track individual method calls with parameters using `@Trackable` and `@Track`:
 

@@ -17,12 +17,11 @@ class SampleApp : Application() {
                     debugMode = true
                     providers.add(InMemoryDebugAnalyticsProvider())
 
+                    errorHandler = { throwable ->
+                        Log.e("Analytics", "Method tracking error", throwable)
+                    }
                     methodTracking {
                         enabled = true
-                        errorHandler = { throwable ->
-                            Log.e("Analytics", "Method tracking error", throwable)
-                        }
-
                         // Register custom parameter serializers
                         customSerializers.add(UserProfileAnalyticsSerializer())
                         customSerializers.add(LimitedCollectionSerializer())

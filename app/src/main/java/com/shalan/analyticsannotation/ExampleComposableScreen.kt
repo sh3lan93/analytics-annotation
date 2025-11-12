@@ -107,8 +107,8 @@ fun ProductCard(
             mapOf(
                 "product_id" to productId,
                 "product_name" to productName,
-                "display_context" to "card"
-            )
+                "display_context" to "card",
+            ),
         )
     }
 
@@ -130,7 +130,7 @@ fun ProductCard(
                     ComposableScreenTracker.handleProductClick(
                         productId,
                         productName,
-                        "card_button"
+                        "card_button",
                     )
                 },
             ) {

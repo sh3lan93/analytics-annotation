@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-11-12
+
+### 📚 Documentation
+
+- Update version to 2.0.0 in README files ([#10](https://github.com/sh3lan93/analytics-annotation/issues/10))
+
+### ⚙️ Miscellaneous Tasks
+
+- Use Extracted @TrackScreen Annotation Parameters in Bytecode Instrumentation ([#11](https://github.com/sh3lan93/analytics-annotation/issues/11))
+
 ## [2.0.0] - 2024-11-06
 
 ### 🚜 Refactor
@@ -92,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update GitHub Actions and improve security for PRs
 - Update relative links to absolute URLs in README
 - Remove separate dependency check job
+- Add CHANGELOG.md and cliff.toml configuration
 
 ### Build
 
